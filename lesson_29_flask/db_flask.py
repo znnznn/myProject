@@ -2,7 +2,7 @@ import psycopg2
 import datetime
 
 from psycopg2.extras import RealDictCursor
-
+SECRET_KEY = '&uig(c6l^ph+$eb%e@cweq1zvwy)#lzoj#a-83ty8v^5q0pkmy'
 
 class DataBase:
     """ work with the database """

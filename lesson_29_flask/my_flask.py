@@ -84,7 +84,8 @@ def user_page():
     i = 0
     while i != amount_stock:
         data_symbol = symbol_stocks(my_stocks[i]['symbol'])
-        if data_symbol['quotes']['quote']['change_percentage'] >= 0:
+        print(data_symbol)
+        if True is data_symbol['quotes']['quote']['change_percentage'] >= 0:
             my_stocks[i]['positive_change'] = True
         else:
             my_stocks[i]['positive_change'] = False
@@ -109,11 +110,11 @@ def user_search():
             stocks = list_stocks['securities']['security']
             for i in stocks:
                 if i['symbol'] == stock[0]['symbol']:
-                    my_stocks =[i]
+                    my_stocks = [i]
         print(my_stocks)
         data_symbol = [symbol_stocks(my_stocks[0]['symbol'])]
         if data_symbol:
-            if data_symbol[0]['quotes']['quote']['change_percentage'] >= 0:
+            if True is data_symbol[0]['quotes']['quote']['change_percentage'] >= 0:
                 my_stocks[0]['positive_change'] = True
             else:
                 my_stocks[0]['positive_change'] = False
@@ -144,6 +145,8 @@ def user_list_search():
                 price = user_stocks[i]['ask']
                 data_symbol = symbol_stocks(user_stocks[i]['symbol'])
                 price_new = data_symbol['quotes']['quote']['bid']
+                if not price_new:
+                    price_new = 0
                 delta = round((price_new - price) * 100, 2)
                 user_stocks[i]['profit'] = delta
                 user_stocks[i]['bid'] = price
@@ -212,6 +215,8 @@ def user_list():
         price = user_stocks[i]['ask']
         data_symbol = symbol_stocks(user_stocks[i]['symbol'])
         price_new = data_symbol['quotes']['quote']['bid']
+        if not price_new:
+            price_new = 0
         delta = round((price_new - price) * 100, 2)
         user_stocks[i]['profit'] = delta
         user_stocks[i]['bid'] = price
