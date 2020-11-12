@@ -19,5 +19,13 @@ from . import views
 urlpatterns = [
     path('grappelli/', include('grappelli.urls')),
     path('', views.index, name='Home'),
+    path('login', views.contacts, name='Login'),
+    path('new_user', views.contacts, name='SignUp'),
+    path('profile', views.contacts, name='Profile'),
+    path('user', views.contacts, name='UserPage'),
+    path('user/list', views.contacts, name='UserList'),
+    path('user/profit', views.contacts, name='Profit'),
     path('contacts', views.contacts, name='Contacts'),
+    path('user/delete', views.contacts, name='deleteProfile'),
+
 ]
