@@ -1,4 +1,4 @@
-{% extends 'main.html'  %}
+{% extends 'main/main.html'  %}
 
 {% block title  %}
     {{ title }}
@@ -9,7 +9,7 @@
 
     <div class="skippy overflow-hidden">
   <div class="container-xl">
-    <a class="sr-only sr-only-focusable d-inline-flex p-2 m-1" href="{{ url 'deleteProfile' }}" style="color:#dbff6d">{{ title }}</a>
+    <a class="sr-only sr-only-focusable d-inline-flex p-2 m-1" href="{% url 'deleteProfile' %}" style="color:#dbff6d">{{ title }}</a>
   </div>
     </div>
 
@@ -33,7 +33,7 @@
 
   <footer class="mastfoot mt-auto">
     <div class="inner">
-       <p  style="color:#fff">Книга скарг і пропозицій <a href="{{url 'Contacts' }}" style="color:#dbff6d">email</a>.</p>
+       <p  style="color:#fff">Книга скарг і пропозицій <a href="{% url 'Contacts' %}" style="color:#dbff6d">email</a>.</p>
     </div>
   </footer>
 </div>

@@ -1,4 +1,4 @@
-{% extends 'main.html'  %}
+{% extends 'main/main.html'  %}
 
 {% block title  %}
      {{ title }}
@@ -15,7 +15,7 @@
 
         </div>
         </header>
-        <form action="{{url 'login' }}" method="POST" class="form-signin">
+        <form action="{% url 'Login' %}" method="POST" class="form-signin">
           <h1 class="h3 mb-3 font-weight-normal">Будь ласка введіть свої дані</h1>
           <label for="inputEmail" class="sr-only">Email address</label>
           <input type="email" name="email" value="" id="inputEmail" class="form-control" placeholder="Email address"  required="">
@@ -32,7 +32,7 @@
           </div>
             <p>
                <button  formmethod="post" class="btn btn-lg btn-secondary" type="submit">Зайти в кабінет</button>
-                <ul><h2><li class="list-inline-item"><a href="{{url 'SignUp' }}" style="color:#FFF5EE">Зареєструватись</a></li></h2></ul>
+                <ul><h2><li class="list-inline-item"><a href="{% url 'SignUp' %}" style="color:#FFF5EE">Зареєструватись</a></li></h2></ul>
             </p>
             <p class="mt-5 mb-3 text-muted">© 2020-2020</p>
         </form>

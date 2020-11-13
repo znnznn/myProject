@@ -4,7 +4,8 @@ from django.http import HttpResponse
 
 
 def index(request):
-    return render(request, 'main/index.html')
+    title = {'title': 'col'}
+    return render(request, 'main/index.html', context=title)
 
 
 def contacts(request):
@@ -24,12 +25,25 @@ def profile_user(request):
 
 
 def user(request):
-    return render(request, 'main/profile_user.html')
+    return render(request, 'main/user.html')
+
+
+def user_search(request):
+    return render(request, 'main/user.html')
 
 
 def user_list(request):
-    return render(request, 'main/profile_user.html')
+    return render(request, 'main/user_list.html')
+
+def user_list_del(request):
+    return render(request, 'main/user_list.html')
+
+
 
 
 def user_profit(request):
-    return render(request, 'main/profile_user.html')
+    return render(request, 'main/user_profit.html')
+
+
+def del_user(request):
+    return render(request, 'main/delete_profile.html')

@@ -1,4 +1,4 @@
-{% extends 'main.html'  %}
+{% extends 'main/main.html'  %}
 
 {% block title  %}
      {{ title }}
@@ -12,18 +12,10 @@
 
 
   <h1 style="color:#dbff6d">{{ title }}</h1>
-      {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <ul class=flashes>
-        {% for message in messages %}
-          <li><h3 style="color:#dbff6d">{{ message }}</h3></li>
-        {% endfor %}
-        </ul>
-      {% endif %}
-      {% endwith %}
+
     <ul>
-        <li class="list-inline-item"><a href="{{url_for('user_list')}}" style="color:#fff">Дані по обраним цінним паперам</a></li>
-        <li class="list-inline-item"><a href="{{url_for('user_profit_page')}}" style="color:#fff">Прибуток від операцій</a></li>
+        <li class="list-inline-item"><a href="{% url 'user_list' %}" style="color:#fff">Дані по обраним цінним паперам</a></li>
+        <li class="list-inline-item"><a href="{% url 'user_profit_page' %}" style="color:#fff">Прибуток від операцій</a></li>
     </ul>
 
   <h2 class="mt-4" style="color:#dbff6d">Перелік здійснених операцій</h2>
