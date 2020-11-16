@@ -19,7 +19,7 @@ from . import views
 urlpatterns = [
     path('grappelli/', include('grappelli.urls')),
     path('', views.index, name='Home'),
-    path('login', views.login, name='Login'),
+    path('login', views.login_page, name='Login'),
     path('new_user', views.new_user, name='SignUp'),
     path('profile', views.profile_user, name='Profile'),
     path('user', views.user, name='UserPage'),
