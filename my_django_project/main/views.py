@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import logout, login
+from django.contrib.auth import logout, login, authenticate
+from django.contrib.auth.models import User
 from django.http import HttpResponse
 # Create your views here.
 
@@ -16,8 +17,15 @@ def contacts(request):
 
 def login_page(request):
     if request.POST:
-        data_user = dict(request.form)
-        print(data_user)
+        data_user = dict(request.POST)
+        user = authenticate(username=data_user['email'][0], password=data_user['password'][0])
+        if user:
+            login(request, user)
+            message = f'{user["username"]} вітаємо!'
+            return render(request, 'main/user.html', context={'user': user, 'message': message})
+        else:
+            message = f'Користувача з такими даними не існує.'
+        return render(request, 'main/login.html', context={'user': user, 'message': message})
     return render(request, 'main/login.html')
 
 
