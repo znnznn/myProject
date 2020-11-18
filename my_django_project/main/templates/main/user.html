@@ -10,16 +10,16 @@
 
     <div class="container">
         <div class="container">
-    <form class="form-inline mt-2 mt-md-0" id="search" action="{% url 'user_search' %}" method="post">
+    <form class="form-inline mt-2 mt-md-0" id="search" action="{% url 'user_search' %}" method="post">{% csrf_token %}
         <input class="form-control mr-sm-2" name="symbol" value="" type="text" placeholder="Пошук" aria-label="Пошук" required="">
         <button form="search" class="btn btn-outline-success my-2 my-sm-0" type="submit" formmethod="post">Пошук</button>
-      </form>
+      </form>{% csrf_token %}
 
   <h1 style="color:#dbff6d">{{ title }}</h1>
 
     <ul>
-        <li class="list-inline-item"><a href="{{url_for('user_list')}}" style="color:#fff">Дані по обраним цінним паперам</a></li>
-        <li class="list-inline-item"><a href="{{url_for('user_profit_page')}}" style="color:#fff">Прибуток від операцій</a></li>
+        <li class="list-inline-item"><a href="{% url 'UserList' %}" style="color:#fff">Дані по обраним цінним паперам</a></li>
+        <li class="list-inline-item"><a href="{% url 'Profit' %}" style="color:#fff">Прибуток від операцій</a></li>
     </ul>
 
 
@@ -31,7 +31,7 @@
 			<thead>
 				<tr bgcolor="#007bff" style="color:#fff">
 
-                   {% for key in stocks[0].keys() %}
+                   {% for key in stocks.0.keys %}
                         {% if key == 'quote' %}
 
                             <th>Ціна відкриття сьогодні</th>
@@ -61,11 +61,11 @@
 			<tbody>
 
                 {% for value in stocks %}
-                    {% if value['positive_change'] %}
+                    {% if value.positive_change %}
                         <tr bgcolor="#1de04e" style="color:#fff">
-                                {% for key, val in value.items() %}
+                                {% for key, val in value.items %}
                                     {% if key == 'quote' %}
-                                        {% for key, symbol in val.items() %}
+                                        {% for key, symbol in val.items %}
                                             {% if key == 'prevclose' %}
                                                 <td>{{ symbol }}</td>
                                             {% elif key == 'open' %}
@@ -90,13 +90,13 @@
                                         <td>{{ val }}</td>
                                     {% endif %}
                                 {% endfor %}
-                            <td> <form id="click-green" action="{{ url_for('user_list') }}" method="post" ><input type="hidden" name="stock" value="{{ value['quote'] }}"><button formmethod="post" class="btn btn-primary"  type="submit" onclick="">Купити</button></form></td>
+                            <td> <form id="click-green" action="{% url 'UserList' %}" method="post" >{% csrf_token %}<input type="hidden" name="stock" value="{{ value.quote }}"><button formmethod="post" class="btn btn-primary"  type="submit" onclick="">Купити</button></form>{% csrf_token %}</td>
                         </tr>
                     {% else %}
                          <tr bgcolor="#ff8080" style="color:#fff">
-                                    {% for key, val in value.items() %}
+                                    {% for key, val in value.items %}
                                         {% if key == 'quote' %}
-                                            {% for key, symbol in val.items() %}
+                                            {% for key, symbol in val.items %}
                                                 {% if key == 'prevclose' %}
                                                     <td>{{ symbol }}</td>
                                                 {% elif key == 'open' %}
@@ -121,7 +121,7 @@
                                             <td>{{ val }}</td>
                                         {% endif %}
                                     {% endfor %}
-                                <td> <form action="{{ url_for('user_list') }}" method="post" id="click-red"><input type="hidden" name="stock" value="{{ value['quote'] }}"><button formmethod="post" class="btn btn-primary"  type="submit" onclick="">Купити</button></form></td>
+                                <td> <form action="{% url 'UserList' %}" method="post" id="click-red">{% csrf_token %}<input type="hidden" name="stock" value="{{ value.quote }}"><button formmethod="post" class="btn btn-primary"  type="submit" onclick="">Купити</button></form>{% csrf_token %}</td>
                             </tr>
                     {% endif %}
                 {% endfor %}

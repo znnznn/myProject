@@ -17,7 +17,7 @@
 
     <div class="col-md-8 order-md-1">
       <h4 class="mb-3" style="color:#dbff6d">Ваші дані</h4>
-      <form method="post" class="needs-validation" style="color:#dbff6d">
+      <form method="post" class="needs-validation" style="color:#dbff6d">{% csrf_token %}
         <div class="row">
           <div class="col-md-6 mb-3">
             <label for="firstName">Ім'я</label>
@@ -56,14 +56,6 @@
           </div>
         </div>
 
-        <div class="mb-3">
-          <label for="address">Місце реєстрації</label>
-          <input type="text" class="form-control" id="address" name="address" placeholder="1234 Рівне Рівненська" required="">
-          <div class="invalid-feedback">
-           Будь ласка введіть адресу.
-          </div>
-        </div>
-
 
         <hr class="mb-4">
 
@@ -83,7 +75,7 @@
             </a>
           </p>
 
-      </form>
+      </form>{% csrf_token %}
     </div>
   </div>
 
