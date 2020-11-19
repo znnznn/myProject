@@ -23,7 +23,7 @@ class TradeStock(models.Model):
     prevclose = models.DecimalField(max_digits=50, decimal_places=5, verbose_name='Попередня ціна закриття')
     week_52_high = models.DecimalField(max_digits=50, decimal_places=5, verbose_name='Найвижча ціна за рік')
     week_52_low = models.DecimalField(max_digits=50, decimal_places=5, verbose_name='Найнижча ціна за рік')
-    trade_date = models.DateTimeField(verbose_name='Дата купівлі')
+    trade_date = models.DateTimeField(auto_now=True, verbose_name='Дата купівлі')
 
 
 class Message(models.Model):
@@ -32,4 +32,4 @@ class Message(models.Model):
     user_name = models.CharField(max_length=50, verbose_name='Name')
     user_email = models.CharField(max_length=50, verbose_name='Email')
     message = models.TextField(max_length=500, verbose_name='message')
-    msg_date = models.DateTimeField(verbose_name='message_date')
+    msg_date = models.DateTimeField(auto_now=True, verbose_name='message_date')
