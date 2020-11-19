@@ -16,8 +16,10 @@
         <nav class="nav-tabs nav-item nav-link">
     <ul class="list-inline">
         <li class="list-inline-item"><a href="{% url 'Home' %}"><h4>Головна сторінка</h4></a></li>
+        {% if not user.is_authenticated %}
         <li class="list-inline-item"><a href="{% url 'Login' %}"><h4>Авторизація</h4></a></li>
         <li class="list-inline-item"><a href="{% url 'SignUp' %}"><h4>Зареєструватись</h4></a></li>
+        {% endif %}
         <li class="list-inline-item"><a href="{% url 'Contacts' %}"><h4>Контакти</h4></a></li>
 
 

@@ -12,8 +12,11 @@
         <h3> {{ title }} </h3>
 
     </ul>
-        <form class="form-signin" style="color:#cecff2">
+        <form class="form-signin" style="color:#cecff2">{% csrf_token %}
           <img class="mb-4" >
+            {% if message %}
+            <h2>{{ message }}</h2>
+            {% endif %}
           <h4 class="h3 mb-3 font-weight-normal">Будь ласка введіть свої дані</h4>
           <label for="inputEmail" class="sr-only">Email address</label>
           <input type="email" id="inputEmail" name="email" class="form-control" placeholder="Email address" required="" autofocus="">
@@ -23,15 +26,15 @@
           <div class="text-center">
               <br>
              <label>
-                 <textarea class="form-control" name="message" rows="7" cols="120" required="" placeholder="Введіть текст повідомлення i ми обов'язково Вам надішлемо відповідь" autofocus=""></textarea>
+                 <textarea class="form-control" name="message" rows="7" cols="151" required="" placeholder="Введіть текст повідомлення i ми обов'язково Вам надішлемо відповідь" autofocus=""></textarea>
              </label>
 
           </div>
-          <button formmethod="post" class="btn btn-lg btn-primary btn-block" type="submit">Надіслати повідомлення</button>
+          <button formmethod="POST" class="btn btn-lg btn-primary btn-block" type="submit">{% csrf_token %}Надіслати повідомлення</button>{% csrf_token %}
             <h4> Головний офіс y м.Рівне </h4>
             <h5> Штабквартира : Офіс для студентів "Beetroot academy" </h5>
           <p class="mt-5 mb-3 text-muted">© 2020-2020</p>
-        </form>
+        </form>{% csrf_token %}
     </body>
  </div>
 {% endblock %}
