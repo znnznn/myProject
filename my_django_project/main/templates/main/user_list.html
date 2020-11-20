@@ -9,13 +9,13 @@
 <body class="py-4">
 
     <div class="container">
-    <form class="form-inline mt-2 mt-md-0" id="search" action="{% url 'user_search' %}" method="post">
+    <form class="form-inline mt-2 mt-md-0" id="search" action="{% url 'user_search' %}" method="post">{% csrf_token %}
         <input class="form-control mr-sm-2" name="symbol" value="" type="text" placeholder="Пошук" aria-label="Пошук" required="">
         <button form="search" class="btn btn-outline-success my-2 my-sm-0" type="submit" formmethod="post">Пошук</button>
-      </form>
+      </form>{% csrf_token %}
 
   <h1 style="color:#dbff6d">{{ title }}</h1>
-      {% with messages = get_flashed_messages() %}
+
       {% if messages %}
         <ul class=flashes>
         {% for message in messages %}
@@ -23,7 +23,7 @@
         {% endfor %}
         </ul>
       {% endif %}
-      {% endwith %}
+
     <ul>
         <li class="list-inline-item"><a href="{% url 'user_list' %}" style="color:#dbff6d">Дані по обраним цінним паперам</a></li>
         <li class="list-inline-item"><a href="{% url 'user_profit_page' %}" style="color:#dbff6d">Прибуток від операцій</a></li>
@@ -37,7 +37,7 @@
 			<thead>
 				<tr bgcolor="#007bff" style="color:#fff">
 
-                   {% for key in stocks[0].keys() %}
+                   {% for key in stocks.keys() %}
                         {% if key == "symbol" %}
                             <th>Символ паперу</th>
                         {% elif key == "exch" %}
@@ -98,7 +98,7 @@
                                     {% endif %}
                                 {% endfor %}
                                 {% if value.get('Дані відсутні') == None %}
-                                    <td> <form id="click-green" action="{% url 'user_list_del' %}" method="post" ><input type="hidden" name="stock" value="{{ value }}"><button formmethod="post" class="btn btn-primary"  type="submit" onclick="">Продати</button></form></td>
+                                    <td> <form id="click-green" action="{% url 'user_list_del' %}" method="post" >{% csrf_token %}<input type="hidden" name="stock" value="{{ value }}">{% csrf_token %}<button formmethod="post" class="btn btn-primary"  type="submit" onclick="">{% csrf_token %}Продати</button></form></td>
                                 {% endif %}
                         </tr>
                     {% else %}
@@ -123,7 +123,7 @@
                                     {% endif %}
                                 {% endfor %}
                                 {% if value.get('Дані відсутні') == None %}
-                                    <td> <form action="{% url 'user_list_del' %}" method="post" id="click-red"><input type="hidden" name="stock" value="{{ value }}"><button formmethod="post" class="btn btn-primary"  type="submit" onclick="">Продати</button></form></td>
+                                    <td> <form action="{% url 'user_list_del' %}" method="post" id="click-red">{% csrf_token %}<input type="hidden" name="stock" value="{{ value }}">{% csrf_token %}<button formmethod="post" class="btn btn-primary"  type="submit" onclick="">{% csrf_token %}Продати</button></form></td>
                                 {% endif %}
                             </tr>
                     {% endif %}

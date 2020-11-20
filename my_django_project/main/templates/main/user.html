@@ -54,7 +54,9 @@
                         {% endif %}
 					{% endfor %}
                    <th>
-                    <button  formmethod="post" class="btn" type="submit">Стежити</button>
+                    {% if not btn %}
+                    <button  formmethod="post" class="btn" type="submit">{% csrf_token %}Стежити</button>
+                    {% endif %}
                     </th>
 				</tr>
 			</thead>
@@ -90,7 +92,9 @@
                                         <td>{{ val }}</td>
                                     {% endif %}
                                 {% endfor %}
-                            <td> <form id="click-green" action="{% url 'UserList' %}" method="post" >{% csrf_token %}<input type="hidden" name="stock" value="{{ value.quote }}"><button formmethod="post" class="btn btn-primary"  type="submit" onclick="">Купити</button></form>{% csrf_token %}</td>
+                            {% if  not btn %}
+                                <td> <form id="click-green" action="{% url 'UserList' %}" method="post" >{% csrf_token %}<input type="hidden" name="stock" value="{{ value.quote }}"><button formmethod="post" class="btn btn-primary"  type="submit" onclick="">Купити</button></form>{% csrf_token %}</td>
+                            {% endif %}
                         </tr>
                     {% else %}
                          <tr bgcolor="#ff8080" style="color:#fff">
@@ -121,8 +125,10 @@
                                             <td>{{ val }}</td>
                                         {% endif %}
                                     {% endfor %}
+                             {% if not btn %}
                                 <td> <form action="{% url 'UserList' %}" method="post" id="click-red">{% csrf_token %}<input type="hidden" name="stock" value="{{ value.quote }}"><button formmethod="post" class="btn btn-primary"  type="submit" onclick="">Купити</button></form>{% csrf_token %}</td>
-                            </tr>
+                             {% endif %}
+                         </tr>
                     {% endif %}
                 {% endfor %}
 
