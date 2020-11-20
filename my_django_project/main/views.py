@@ -1,5 +1,5 @@
 import json
-import  datetime
+
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout, login, authenticate, get_user_model
@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.http import HttpResponseRedirect
 
 from .tradier_api import symbol_stocks
-from .models import Message
+from .models import Message, TradeStock
 # Create your views here.
 
 
@@ -25,7 +25,7 @@ def check_user(request):
 
 def index(request):
     title = check_user(request)
-    return render(request, 'main/index.html', context=title)
+    return render(request, 'main/index.html', context={'title': title})
 
 
 def contacts(request):
@@ -69,7 +69,7 @@ def new_user(request):
             return render(request, 'main/new_user.html', context={'message': message})
         user = User.objects.create_user(username=data_user['email'][0], email=data_user['email'][0],
                                         password=data_user['password'][0])
-        user.last_name = data_user['firstName'][0]
+        user.first_name = data_user['firstName'][0]
         user.last_name = data_user['lastName'][0]
         user.save()
         if not user:
@@ -107,17 +107,48 @@ def user_page(request):
 
 @login_required(login_url='/login')
 def user_search(request):
-    return render(request, 'main/user.html')
+
+    user = request.user
+    if request.POST:
+        stock_search = dict(request.POST)
+        my_stocks = False
+        with open('main/stocks_all.json', 'r') as file_stocks:
+            list_stocks = json.load(file_stocks)
+            stocks = list_stocks['securities']['security']
+        for i in stocks:
+            if i['symbol'] == str(stock_search['symbol'][0]).upper():
+                my_stocks = [i]
+        data_symbol = [symbol_stocks(my_stocks[0]['symbol']) if my_stocks else False]
+        if data_symbol[0]:
+            if True is data_symbol[0]['quotes']['quote']['change_percentage'] >= 0:
+                my_stocks[0]['positive_change'] = True
+            else:
+                my_stocks[0]['positive_change'] = False
+            my_stocks[0]['quote'] = data_symbol[0]['quotes']['quote']
+            return render(request, 'main/user.html', context={'title': user.username, 'stocks': my_stocks})
+        my_stocks = [{'Дані відсутні': f'Символ {stock_search["symbol"][0]} не знайдено'}]
+        return render(request, 'main/user.html', context={'title': user.username, 'stocks': my_stocks, "btn": True})
+    return render(request, 'main/user.html', context={'title': user.username})
 
 
 @login_required(login_url='/login')
 def user_list(request):
-    return render(request, 'main/user_list.html')
+    user = request.user
+    all_data = TradeStock.objects.filter(user_id=user.id)
+    if request.POST:
+        my_stock = dict(request.POST)
+        my_stock = eval(my_stock['stock'][0])
+        data_user = TradeStock(user=user)
+        data_user.data_stock(my_stock)
+        all_data = TradeStock.objects.filter(user_id=user.id)
+        print(all_data)
+        return render(request, 'main/user_list.html', context={'stocks': all_data, 'title': user.first_name})
+    return render(request, 'main/user_list.html', context={'stocks': all_data, 'title': user.first_name})
 
 
 
 
-
+@login_required(login_url='/login')
 def user_search_list(request):
     pass
 
