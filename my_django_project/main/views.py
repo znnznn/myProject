@@ -128,33 +128,92 @@ def user_search(request):
             return render(request, 'main/user.html', context={'title': user.username, 'stocks': my_stocks})
         my_stocks = [{'Дані відсутні': f'Символ {stock_search["symbol"][0]} не знайдено'}]
         return render(request, 'main/user.html', context={'title': user.username, 'stocks': my_stocks, "btn": True})
-    return render(request, 'main/user.html', context={'title': user.username})
+    return HttpResponseRedirect(redirect_to='user')
 
 
 @login_required(login_url='/login')
 def user_list(request):
+    """ exclude """
+
     user = request.user
-    all_data = TradeStock.objects.filter(user_id=user.id)
     if request.POST:
         my_stock = dict(request.POST)
         my_stock = eval(my_stock['stock'][0])
         data_user = TradeStock(user=user)
-        data_user.data_stock(my_stock)
-        all_data = TradeStock.objects.filter(user_id=user.id)
+        data_save = data_user.data_stock(my_stock)
+        if data_save:
+            message = 'Цінні папери додано в портфель'
+        else:
+            message = 'Сталась помилка спробуйте, ще раз'
+    else:
+        message = ''
+    all_data = TradeStock.objects.filter(user_id=user.id).values()
+    if all_data:
+        all_data = list(all_data)
+        for item in all_data:
+            price = float(item['ask_price'])
+            data_symbol = symbol_stocks(item['symbol'])
+            price_new = data_symbol['quotes']['quote']['bid']
+            delta = round((price_new - price) * 100, 2)
+            item['profit'] = delta
+            item['bid_price'] = price
+            item['ask_price'] = price_new
+            item['change_percentage'] = round((price_new - price) / price * 100, 2)
+            if delta >= 0:
+                item['positive_profit'] = True
+            else:
+                item['positive_profit'] = False
         print(all_data)
-        return render(request, 'main/user_list.html', context={'stocks': all_data, 'title': user.first_name})
-    return render(request, 'main/user_list.html', context={'stocks': all_data, 'title': user.first_name})
-
-
+        all_data = sorted(all_data, key=lambda symbol: symbol['trade_date'], reverse=True)
+        sum_profit = sum([+i['profit'] for i in all_data])
+    else:
+        all_data = [{'Дані відсутні': 'Список спостереження порожній'}]
+        sum_profit = 0
+    not_show = ['open_price', 'high_price', 'low_price', 'prevclose', 'positive_profit', 'user_id']
+    context = {'stocks': all_data, 'title': user.username, 'message': message, 'sum_profit': sum_profit,
+               'not_show': not_show}
+    return render(request, 'main/user_list.html', context=context)
 
 
 @login_required(login_url='/login')
 def user_search_list(request):
-    pass
+    user = request.user
+    btn = False
+    if request.POST:
+        stock_search = dict(request.POST)
+        symbol = str(stock_search['symbol'][0]).upper()
+        stocks = TradeStock.objects.filter(user=user, symbol=symbol).values()
+        if stocks:
+            all_data = list(stocks)
+            print(all_data)
+            for item in all_data:
+                price = float(item['ask_price'])
+                data_symbol = symbol_stocks(item['symbol'])
+                price_new = data_symbol['quotes']['quote']['bid']
+                delta = round((price_new - price) * 100, 2)
+                item['profit'] = delta
+                item['bid_price'] = price
+                item['ask_price'] = price_new
+                item['change_percentage'] = round((price_new - price) / price * 100, 2)
+                if delta >= 0:
+                    item['positive_profit'] = True
+                else:
+                    item['positive_profit'] = False
+            all_data = sorted(all_data, key=lambda symbol: symbol['trade_date'], reverse=True)
+            sum_profit = sum([+i['profit'] for i in all_data])
+        else:
+            all_data = [{'Дані відсутні': f'Символ {stock_search["symbol"][0]} не знайдено'}]
+            btn = True
+            sum_profit = 0
+        not_show = ['open_price', 'high_price', 'low_price', 'prevclose', 'positive_profit', 'user_id']
+        context = {'stocks': all_data, 'title': user.username, 'sum_profit': sum_profit,
+                   'not_show': not_show, 'btn': btn}
+        return render(request, 'main/user_list.html', context=context)
+    return HttpResponseRedirect(redirect_to='user/list')
 
 
 @login_required(login_url='/login')
-def user_list_del(request):
+def user_list_sel(request):
     return render(request, 'main/user_list.html')
 
 
