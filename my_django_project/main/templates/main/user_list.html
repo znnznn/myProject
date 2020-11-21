@@ -9,7 +9,7 @@
 <body class="py-4">
 
     <div class="container">
-    <form class="form-inline mt-2 mt-md-0" id="search" action="{% url 'user_search' %}" method="post">{% csrf_token %}
+    <form class="form-inline mt-2 mt-md-0" id="search" action="{% url 'user_search_list' %}" method="post">{% csrf_token %}
         <input class="form-control mr-sm-2" name="symbol" value="" type="text" placeholder="Пошук" aria-label="Пошук" required="">
         <button form="search" class="btn btn-outline-success my-2 my-sm-0" type="submit" formmethod="post">Пошук</button>
       </form>{% csrf_token %}
@@ -25,8 +25,8 @@
       {% endif %}
 
     <ul>
-        <li class="list-inline-item"><a href="{% url 'user_list' %}" style="color:#dbff6d">Дані по обраним цінним паперам</a></li>
-        <li class="list-inline-item"><a href="{% url 'user_profit_page' %}" style="color:#dbff6d">Прибуток від операцій</a></li>
+        <li class="list-inline-item"><a href="{% url 'UserList' %}" style="color:#dbff6d">Дані по обраним цінним паперам</a></li>
+        <li class="list-inline-item"><a href="{% url 'Profit' %}" style="color:#dbff6d">Прибуток від операцій</a></li>
 
     </ul>
 
@@ -37,18 +37,18 @@
 			<thead>
 				<tr bgcolor="#007bff" style="color:#fff">
 
-                   {% for key in stocks.keys() %}
+                   {% for key in stocks.0.keys %}
                         {% if key == "symbol" %}
                             <th>Символ паперу</th>
                         {% elif key == "exch" %}
                             <th>Біржа</th>
-                        {% elif key == "type" %}
+                        {% elif key == "stock_type" %}
                             <th>Тип паперу</th>
                         {% elif key == "description" %}
                             <th>Емітент цінних паперів</th>
-                        {% elif key == "bid" %}
-                            <th>Ціна по який придбано атив</th>
-                        {% elif key == "ask" %}
+                        {% elif key == "bid_price" %}
+                            <th>Ціна по який придбано актив</th>
+                        {% elif key == "ask_price" %}
                             <th>Ціна можливого продажу</th>
                         {% elif key == 'change_percentage' %}
                            <th>Зміна ціни у відсотках</th>
@@ -62,7 +62,7 @@
                            <th>Дата покупки (стеження)</th>
                         {% elif key == 'profit' %}
                            <th>Можливий прибуток/ збиток =</th>
-                        {% elif not key in ['open', 'high', 'low', 'prevclose', 'positive_profit'] %}
+                        {% elif not key in not_show %}
                            <th>{{ key }}</th>
                         {% endif %}
 					{% endfor %}
@@ -76,9 +76,9 @@
 			<tbody>
 
                 {% for value in stocks %}
-                    {% if value['positive_profit'] %}
+                    {% if value.positive_profit %}
                         <tr bgcolor="#1de04e" style="color:#fff">
-                                {% for key, val in value.items() %}
+                                {% for key, val in value.items %}
                                     {% if key == 'bid' %}
                                         <td>{{ val }}</td>
                                     {% elif key == 'ask' %}
@@ -93,20 +93,20 @@
                                         <td>{{ val }}</td>
                                     {% elif key == 'profit' %}
                                         <td>{{ val }} ↑</td>
-                                    {% elif not key in ['open', 'high', 'low', 'prevclose', 'positive_profit'] %}
+                                    {% elif not key in not_show %}
                                         <td>{{ val }}</td>
                                     {% endif %}
                                 {% endfor %}
-                                {% if value.get('Дані відсутні') == None %}
-                                    <td> <form id="click-green" action="{% url 'user_list_del' %}" method="post" >{% csrf_token %}<input type="hidden" name="stock" value="{{ value }}">{% csrf_token %}<button formmethod="post" class="btn btn-primary"  type="submit" onclick="">{% csrf_token %}Продати</button></form></td>
+                                {% if  not btn %}
+                                    <td> <form id="click-green" action="{% url 'user_list_sel' %}" method="post" >{% csrf_token %}<input type="hidden" name="stock" value="{{ value }}">{% csrf_token %}<button formmethod="post" class="btn btn-primary"  type="submit" onclick="">{% csrf_token %}Продати</button></form></td>
                                 {% endif %}
                         </tr>
                     {% else %}
                          <tr bgcolor="#ff8080" style="color:#fff">
-                                {% for key, val in value.items() %}
-                                    {% if key == 'bid' %}
+                                {% for key, val in value.items %}
+                                    {% if key == 'bid_price' %}
                                         <td>{{ val }}</td>
-                                    {% elif key == 'ask' %}
+                                    {% elif key == 'ask_price' %}
                                         <td>{{ val }}</td>
                                     {% elif key == 'change_percentage' %}
                                         <td>{{ val }}</td>
@@ -118,12 +118,12 @@
                                         <td>{{ val }}</td>
                                     {% elif key == 'profit' %}
                                         <td>{{ val }} ↓</td>
-                                    {% elif not key in ['open', 'high', 'low', 'prevclose', 'positive_profit'] %}
+                                    {% elif not key in not_show %}
                                         <td>{{ val }}</td>
                                     {% endif %}
                                 {% endfor %}
-                                {% if value.get('Дані відсутні') == None %}
-                                    <td> <form action="{% url 'user_list_del' %}" method="post" id="click-red">{% csrf_token %}<input type="hidden" name="stock" value="{{ value }}">{% csrf_token %}<button formmethod="post" class="btn btn-primary"  type="submit" onclick="">{% csrf_token %}Продати</button></form></td>
+                                {% if  not btn %}
+                                    <td> <form action="{% url 'user_list_sel' %}" method="post" id="click-red">{% csrf_token %}<input type="hidden" name="stock" value="{{ value }}">{% csrf_token %}<button formmethod="post" class="btn btn-primary"  type="submit" onclick="">{% csrf_token %}Продати</button></form></td>
                                 {% endif %}
                             </tr>
                     {% endif %}
