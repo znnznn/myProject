@@ -39,7 +39,13 @@ class TradeStock(models.Model):
         self.prevclose = stock['prevclose']
         self.week_52_high = stock['week_52_high']
         self.week_52_low = stock['week_52_low']
-        return self.save()
+        try:
+            self.save()
+            return True
+        except:
+            return False
+
+
 
 
 class Message(models.Model):
