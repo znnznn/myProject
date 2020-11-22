@@ -1,5 +1,7 @@
 import json
 
+import datetime
+
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout, login, authenticate, get_user_model
@@ -147,7 +149,7 @@ def user_list(request):
             message = 'Сталась помилка спробуйте, ще раз'
     else:
         message = ''
-    all_data = TradeStock.objects.filter(user_id=user.id).values()
+    all_data = TradeStock.objects.filter(user_id=user.id).exclude(exch='profit').values()
     if all_data:
         all_data = list(all_data)
         for item in all_data:
@@ -182,7 +184,7 @@ def user_search_list(request):
     if request.POST:
         stock_search = dict(request.POST)
         symbol = str(stock_search['symbol'][0]).upper()
-        stocks = TradeStock.objects.filter(user=user, symbol=symbol).values()
+        stocks = TradeStock.objects.filter(user=user, symbol=symbol).exclude(exch='profit').values()
         if stocks:
             all_data = list(stocks)
             print(all_data)
@@ -214,12 +216,43 @@ def user_search_list(request):
 
 @login_required(login_url='/login')
 def user_list_sel(request):
+    user = request.user
+    if request.POST:
+        sel_stock = dict(request.POST)
+
+        sel_stock = str(sel_stock['stock'][0]).replace('<', '').replace('>', '').replace('Decimal', 'float').replace(
+            'UTC', '').replace('=', '').replace('tzinfo', '')
+        print('replace    ', sel_stock)
+        sel_stock = eval(sel_stock)
+        sel = TradeStock.objects.filter(id=sel_stock['id']).update(prevclose=float(sel_stock['profit']), exch='profit')
+        return HttpResponseRedirect(redirect_to='/user/list')
     return render(request, 'main/user_list.html')
 
 
 @login_required(login_url='/login')
 def user_profit(request):
-    return render(request, 'main/user_profit.html')
+    user = request.user
+    user_profit = TradeStock.objects.filter(user=user, exch='profit').values()
+    if user_profit:
+        sum_profit = sum([+i['prevclose'] for i in user_profit])
+        if sum_profit < 0:
+            message = f'Отриманий збиток за період з {user.date_joined} по {str(datetime.datetime.today())[:16]}'
+        else:
+            message = f'Отриманий прибуток за період з {user.date_joined} по {str(datetime.datetime.today())[:16]}'
+        for i in user_profit:
+            if i['prevclose'] > 0:
+                i['positive_profit'] = True
+            else:
+                i['positive_profit'] = False
+    else:
+        message = f"Ви не здійнили, ще жодної операції."
+        sum_profit = 0
+        user_profit = [{'Дані відсутні': 'Список операцій порожній'}]
+    not_show = ['open_price', 'high_price', 'low_price', 'prevclose', 'positive_profit',
+                'user_id', 'week_52_high', 'week_52_low', 'exch']
+    context = {'stocks': user_profit, 'title': user.username,
+               'sum_profit': sum_profit, 'not_show': not_show, 'message': message}
+    return render(request, 'main/user_profit.html', context=context)
 
 
 @login_required(login_url='/login')
