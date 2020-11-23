@@ -17,18 +17,23 @@
 
     <div class="col-md-8 order-md-1">
       <h4 class="mb-3" style="color:#dbff6d">Ваші дані</h4>
+       {% if message %}
+        <ul class=flashes>
+          <li><h3 style="color:#dbff6d">{{ message }}</h3></li>
+        </ul>
+      {% endif %}
       <form method="post" class="needs-validation" style="color:#dbff6d">{% csrf_token %}
         <div class="row">
           <div class="col-md-6 mb-3">
             <label for="firstName">Ім'я</label>
-            <input type="text" class="form-control" id="firstName" name="firstName" placeholder="Богдан" value="" required="">
+            <input type="text" class="form-control" id="firstName" name="firstName" placeholder="Богдан" value="{{ data_user.firstName.0 }}" required="">
             <div class="invalid-feedback">
               Введіть ім'я
             </div>
           </div>
           <div class="col-md-6 mb-3">
             <label for="lastName">Призвіще</label>
-            <input type="text" class="form-control" id="lastName" name="lastName" placeholder="Українець" value="" required="">
+            <input type="text" class="form-control" id="lastName" name="lastName" placeholder="Українець" value="{{ data_user.lastName.0 }}" required="">
             <div class="invalid-feedback">
               Введіть Призвіще.
             </div>
@@ -41,7 +46,7 @@
             <div class="input-group-prepend">
               <span class="input-group-text">@</span>
             </div>
-            <input type="text" class="form-control" id="username" name="username" placeholder="Username" required="">
+            <input type="text" class="form-control" id="username" name="username" placeholder="Username"  required="">
             <div class="invalid-feedback" style="width: 100%;">
               Введуть ім'я для користування
             </div>
@@ -50,7 +55,7 @@
 
         <div class="mb-3">
           <label for="email" style="color:#dbff6d">Email <span class="text-muted">(Електронна пошта)</span></label>
-          <input type="email" class="form-control" id="email" name="email" placeholder="you@example.com" required="">
+          <input type="email" class="form-control" id="email" name="email" placeholder="you@example.com" value="{{ data_user.email.0 }}" required="">
           <div class="invalid-feedback">
             Будь ласка введіть електронну адресу
           </div>
