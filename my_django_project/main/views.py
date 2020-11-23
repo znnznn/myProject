@@ -19,7 +19,7 @@ amount_stock = 10
 
 def check_user(request):
     if request.user.is_authenticated:
-        title = request.user.username
+        title = request.user.first_name
     else:
         title = 'Біржовий аналітик'
     return title
@@ -65,14 +65,14 @@ def new_user(request):
         data_user = dict(request.POST)
         if data_user['email'][0] != data_user['username'][0]:
             message = 'Username повинен дорівнювати Email'
-            return render(request, 'main/new_user.html', context={'message': message})
+            return render(request, 'main/new_user.html', context={'message': message, 'data_user': data_user})
         elif data_user['password'][0] != data_user['password2'][0]:
             message = 'Паролі мають бути однаковими'
-            return render(request, 'main/new_user.html', context={'message': message})
+            return render(request, 'main/new_user.html', context={'message': message, 'data_user': data_user})
         user = User.objects.create_user(username=data_user['email'][0], email=data_user['email'][0],
                                         password=data_user['password'][0])
-        user.first_name = data_user['firstName'][0]
-        user.last_name = data_user['lastName'][0]
+        user.first_name = str(data_user['firstName'][0]).strip()
+        user.last_name = str(data_user['lastName'][0]).strip()
         user.save()
         if not user:
             message = "Сталась помлка з\'днання з базою даних"
@@ -84,7 +84,22 @@ def new_user(request):
 
 @login_required(login_url='/login')
 def profile_user(request):
-    return render(request, 'main/profile_user.html')
+    user = request.user
+    if request.POST:
+        data_user = dict(request.POST)
+        if data_user['password'][0] != data_user['password2'][0]:
+            message = 'Паролі мають бути однаковими'
+            return render(request, 'main/new_user.html', context={'message': message})
+        User.objects.filter(id=user.id).update(first_name=data_user['firstName'][0], last_name=data_user['lastName'][0])
+        user = User.objects.get(id=user.id)
+        user.set_password(data_user['password'][0])
+        user.save()
+        if not user:
+            message = "Сталась помлка з\'днання з базою даних"
+        else:
+            message = f'{data_user["firstName"][0]} Ваші дані змінено.'
+        return render(request, 'main/profile_user.html', context={'message': message, 'title': user.first_name})
+    return render(request, 'main/profile_user.html', context={'title': user.first_name, 'user': user})
 
 
 @login_required(login_url='/login')
@@ -104,7 +119,7 @@ def user_page(request):
             my_stocks[i]['positive_change'] = False
         my_stocks[i]['quote'] = data_symbol['quotes']['quote']
         i += 1
-    return render(request, 'main/user.html', context={'user': user, 'title': user.username, 'stocks': my_stocks})
+    return render(request, 'main/user.html', context={'user': user, 'title': user.first_name, 'stocks': my_stocks})
 
 
 @login_required(login_url='/login')
@@ -127,9 +142,9 @@ def user_search(request):
             else:
                 my_stocks[0]['positive_change'] = False
             my_stocks[0]['quote'] = data_symbol[0]['quotes']['quote']
-            return render(request, 'main/user.html', context={'title': user.username, 'stocks': my_stocks})
+            return render(request, 'main/user.html', context={'title': user.first_name, 'stocks': my_stocks})
         my_stocks = [{'Дані відсутні': f'Символ {stock_search["symbol"][0]} не знайдено'}]
-        return render(request, 'main/user.html', context={'title': user.username, 'stocks': my_stocks, "btn": True})
+        return render(request, 'main/user.html', context={'title': user.first_name, 'stocks': my_stocks, "btn": True})
     return HttpResponseRedirect(redirect_to='user')
 
 
@@ -151,6 +166,7 @@ def user_list(request):
         message = ''
     all_data = TradeStock.objects.filter(user_id=user.id).exclude(exch='profit').values()
     if all_data:
+        btn = False
         all_data = list(all_data)
         for item in all_data:
             price = float(item['ask_price'])
@@ -170,10 +186,11 @@ def user_list(request):
         sum_profit = sum([+i['profit'] for i in all_data])
     else:
         all_data = [{'Дані відсутні': 'Список спостереження порожній'}]
+        btn = True
         sum_profit = 0
     not_show = ['open_price', 'high_price', 'low_price', 'prevclose', 'positive_profit', 'user_id']
-    context = {'stocks': all_data, 'title': user.username, 'message': message, 'sum_profit': sum_profit,
-               'not_show': not_show}
+    context = {'stocks': all_data, 'title': user.first_name, 'message': message, 'sum_profit': sum_profit,
+               'not_show': not_show, 'btn': btn}
     return render(request, 'main/user_list.html', context=context)
 
 
@@ -208,7 +225,7 @@ def user_search_list(request):
             btn = True
             sum_profit = 0
         not_show = ['open_price', 'high_price', 'low_price', 'prevclose', 'positive_profit', 'user_id']
-        context = {'stocks': all_data, 'title': user.username, 'sum_profit': sum_profit,
+        context = {'stocks': all_data, 'title': user.first_name, 'sum_profit': sum_profit,
                    'not_show': not_show, 'btn': btn}
         return render(request, 'main/user_list.html', context=context)
     return HttpResponseRedirect(redirect_to='user/list')
@@ -224,9 +241,9 @@ def user_list_sel(request):
             'UTC', '').replace('=', '').replace('tzinfo', '')
         print('replace    ', sel_stock)
         sel_stock = eval(sel_stock)
-        sel = TradeStock.objects.filter(id=sel_stock['id']).update(prevclose=float(sel_stock['profit']), exch='profit')
+        TradeStock.objects.filter(id=sel_stock['id']).update(prevclose=float(sel_stock['profit']), exch='profit')
         return HttpResponseRedirect(redirect_to='/user/list')
-    return render(request, 'main/user_list.html')
+    return render(request, 'main/user_list.html', context={'title': user.first_name})
 
 
 @login_required(login_url='/login')
@@ -250,14 +267,23 @@ def user_profit(request):
         user_profit = [{'Дані відсутні': 'Список операцій порожній'}]
     not_show = ['open_price', 'high_price', 'low_price', 'prevclose', 'positive_profit',
                 'user_id', 'week_52_high', 'week_52_low', 'exch']
-    context = {'stocks': user_profit, 'title': user.username,
+    context = {'stocks': user_profit, 'title': user.first_name,
                'sum_profit': sum_profit, 'not_show': not_show, 'message': message}
     return render(request, 'main/user_profit.html', context=context)
 
 
 @login_required(login_url='/login')
 def del_user(request):
-    return render(request, 'main/delete_profile.html')
+    user = request.user
+    title = check_user(request)
+    if request.POST:
+        u = User.objects.get(id=user.id)
+        u.is_active = False
+        u.save()
+        logout_user(request)
+        return HttpResponseRedirect(redirect_to='/login')
+    context = {'title': title, 'message': f'{user.first_name} Ви впевнені, що хочете себе видалити'}
+    return render(request, 'main/delete_profile.html', context=context)
 
 
 @login_required(login_url='/login')
