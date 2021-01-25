@@ -17,18 +17,21 @@ def all_stocks():
     json.dump(resp, stocks, indent=4)
 
 
-def symbol_stocks(symbol):
+def symbol_stocks(symbol: str):
 
     #url = f"https://api.tradier.com/v1/markets/quotes?symbols=aapl"
-    url = f'https://sandbox.tradier.com/v1/markets/quotes?symbols={symbol}'
+    url = f'https://sandbox.tradier.com/v1/markets/quotes?symbols={symbol.upper()}'
     headers = {"Accept": "application/json",
                "Authorization": "Bearer 6ieiYLJ6rJGbWJWHXOivBDFYi7kR"}
     response = requests.request("GET", url, headers=headers)
     resp = response.json()
+    if resp['quotes'].get('quote') is None:
+        return False
     return resp
 
 
-
+if __name__ == '__main__':
+    print(symbol_stocks('aapl'))
 
 
 """ A	NYSE MKT

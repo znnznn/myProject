@@ -1,8 +1,8 @@
-import psycopg2
+import mysql.connector
 import datetime
 
-from psycopg2.extras import RealDictCursor
 SECRET_KEY = '&uig(c6l^ph+$eb%e@cweq1zvwy)#lzoj#a-83ty8v^5q0pkmy'
+
 
 class DataBase:
     """ work with the database """
@@ -15,9 +15,9 @@ class DataBase:
     def data_base(self):
         """ connection to the database """
         try:
-            self.connection = psycopg2.connect(host='localhost', database='postgres', port=5432,
-                                               user='postgres', password='postgres')
-            self.cursor = self.connection.cursor(cursor_factory=RealDictCursor)
+            self.connection = mysql.connector.connect(host='localhost', database='postgres', port=3306,
+                                                      user='postgres', password='postgres')
+            self.cursor = self.connection.cursor(dictionary=True)
         except:
             self.cursor.close()
             return False
@@ -25,12 +25,12 @@ class DataBase:
     def take_user(self):
         """ takes data from database by email """
         try:
-            self.cursor.execute("SELECT * FROM users WHERE email = %s", (f"{self.user['email']}",))
+            self.cursor.execute("SELECT * FROM users WHERE EMAIL = %s", (f"{self.user['EMAIL']}",))
             user = self.cursor.fetchone()
             if user:
                 self.cursor.close()
                 self.connection.commit()
-                return dict(user)
+                return user
             self.cursor.close()
             self.connection.commit()
             return False
@@ -48,7 +48,7 @@ class DataBase:
             if user:
                 self.cursor.close()
                 self.connection.commit()
-                return dict(user)
+                return user
             self.cursor.close()
             self.connection.commit()
             return False
@@ -62,10 +62,10 @@ class DataBase:
         """ changes the data in the database by id """
         try:
             self.data_base()
-            self.cursor.execute("""UPDATE users 
-                                        SET first_name=%s, last_name=%s,
-                                            username=%s, password=%s, 
-                                            email=%s, address=%s  WHERE id=%s;""", (f"{self.user['firstName']}",
+            self.cursor.execute("""UPDATE users
+                                        SET FIRST_NAME=%s, LAST_NAME=%s,
+                                            USERNAME=%s, PASSWORD=%s,
+                                            EMAIL=%s, ADDRESS=%s  WHERE id=%s;""", (f"{self.user['firstName']}",
                                                                                     f"{self.user['lastName']}",
                                                                                     f"{self.user['username']}",
                                                                                     f"{self.user['password']}",
@@ -85,7 +85,7 @@ class DataBase:
     def del_user(self):
         """ deletes user data in the database (delete profile) """
         try:
-            sql = f""" DROP TABLE "{self.user['email']}";"""
+            sql = f""" DROP TABLE {self.user['refactor_email']};"""
             self.cursor.execute("""DELETE FROM users WHERE id = %s;""", (f"{self.user['id']}",))
             self.cursor.execute(sql)
             self.cursor.close()
@@ -106,14 +106,15 @@ class DataBase:
             if table:
                 self.data_base()
                 self.cursor.execute(f"""INSERT INTO users(FIRST_NAME, LAST_NAME, USERNAME,
-                                    PASSWORD, EMAIL, ADDRESS, oper_date)
+                                    PASSWORD, EMAIL, ADDRESS, OPER_DATE)
                                     VALUES(%s, %s, %s, %s, %s, %s, %s);""", (f"{self.user['firstName']}",
-                                                                             f"{self.user['firstName']}",
-                                                                             f"{self.user['username']}",
-                                                                             f"{self.user['password']}",
-                                                                             f"{self.user['email']}",
-                                                                             f"{self.user['address']}",
+                                                                             f"{self.user['lastName']}",
+                                                                             f"{self.user['USERNAME']}",
+                                                                             f"{self.user['PASSWORD']}",
+                                                                             f"{self.user['EMAIL']}",
+                                                                             f"{self.user['ADDRESS']}",
                                                                              f"{self.user['date']}"))
+
                 self.cursor.close()
                 self.connection.commit()
                 return True
@@ -127,15 +128,16 @@ class DataBase:
     def del_user_views(self):
         """ deletes the data on which the user conducts analytics """
         try:
-            sql = f"""DELETE FROM "{self.user['email']}" WHERE ID={self.user['stock']['id']} """
-            self.cursor.execute(sql)
+            sql_del = f"DELETE FROM {self.user['refactor_email']} WHERE id = {self.user['stock']['id']};"
+            self.cursor.execute(sql_del)
             self.user['stock']['exch'] = 'profit'
             self.user['stock']['prevclose'] = self.user['stock']['profit']
             self.user['stock']['trade_date'] = f'''від {self.user["stock"]["trade_date"]}
                                                    до {str(datetime.datetime.today())[:16]}'''
-            user = self.add_user_views()
             self.cursor.close()
             self.connection.commit()
+            self.data_base()
+            user = self.add_user_views()
             return True
         except Exception as e:
             print('del_user_views', e)
@@ -146,50 +148,49 @@ class DataBase:
     def add_user_views(self):
         """ adds the data on which the user conducts analytics """
         user = self.take_user()
-        self.data_base()
         try:
             if user:
-                sql = f"""INSERT INTO "{self.user['email']}"
-                                                   (symbol, description, exch, type, open, high, low, bid, ask,
-                                                    change_percentage, prevclose, week_52_high, week_52_low, trade_date)
-                                                    VALUES('{self.user['stock']['symbol']}',
-                                                           '{self.user['stock']['description']}',
-                                                           '{self.user['stock']['exch']}',
-                                                           '{self.user['stock']['type']}',
-                                                           {self.user['stock']['open']},
-                                                           {self.user['stock']['high']},
-                                                           {self.user['stock']['low']},
-                                                           {self.user['stock']['bid']},
-                                                           {self.user['stock']['ask']},
-                                                           {self.user['stock']['change_percentage']}, 
-                                                           {self.user['stock']['prevclose']},
-                                                           {self.user['stock']['week_52_high']},
-                                                           {self.user['stock']['week_52_low']},
-                                                           '{self.user['stock']['trade_date']}');"""
+                sql = f"""INSERT INTO {self.user['refactor_email']}
+                                                   (symbol, description, exch, type, open, high, low, bid, ASK,
+                                                   change_percentage, prevclose, week_52_high, week_52_low, trade_date)
+                                                VALUES('{self.user['stock']['symbol']}',
+                                                       '{self.user['stock']['description']}',
+                                                       '{self.user['stock']['exch']}',
+                                                       '{self.user['stock']['type']}',
+                                                       {self.user['stock']['open']},
+                                                       {self.user['stock']['high']},
+                                                       {self.user['stock']['low']},
+                                                       {self.user['stock']['bid']},
+                                                       {self.user['stock']['ask']},
+                                                       {self.user['stock']['change_percentage']},
+                                                       {self.user['stock']['prevclose']},
+                                                       {self.user['stock']['week_52_high']},
+                                                       {self.user['stock']['week_52_low']},
+                                                       '{self.user['stock']['trade_date']}');"""
+                self.data_base()
                 self.cursor.execute(sql)
                 self.cursor.close()
                 self.connection.commit()
                 return user
+            return False
         except Exception as e:
             print('add_user_views', e)
-            self.connection.rollback()
+            self.cursor.close()
+            self.connection.commit()
             self.user['Error'] = e
             return False
 
     def take_user_views(self):
         """ takes data on which the user conducts analytics """
-        self.data_base()
         try:
-            sql = f"""SELECT * FROM "{self.user['email']}" where not exch ='profit';"""
-            self.cursor.execute(sql)
+            take_sql = f"""SELECT * FROM {self.user['refactor_email']} WHERE exch !='profit';"""
+            self.cursor.execute(take_sql)
             user = self.cursor.fetchall()
-            stock = [dict(s) for s in user]
-            if user:
-                self.cursor.close()
-                self.connection.commit()
-                return stock
+            stock = [s for s in user]
             self.cursor.close()
             self.connection.commit()
+            if user:
+                return stock
             return False
         except Exception as e:
             self.cursor.close()
@@ -200,10 +201,10 @@ class DataBase:
 
     def take_user_views_symbol(self):
         """ checks for stock in the database """
-        self.data_base()
+
         try:
-            sql = f"""SELECT * FROM "{self.user['email']}" 
-                        WHERE symbol='{self.user['stock']['symbol']}' and exch != 'profit';"""
+            sql = f"""SELECT * FROM {self.user['refactor_email']}
+                            WHERE symbol='{self.user['stock']['symbol']}' and exch != 'profit';"""
             self.cursor.execute(sql)
             user = self.cursor.fetchall()
             stock = [dict(s) for s in user]
@@ -223,11 +224,9 @@ class DataBase:
 
     def take_user_profit(self):
         """ takes data about all profit """
-        self.data_base()
         try:
-            sql = f"""SELECT * FROM "{self.user['email']}" WHERE exch='profit';"""
+            sql = f"""SELECT * FROM {self.user['refactor_email']} WHERE exch='profit';"""
             self.cursor.execute(sql)
-
             user = self.cursor.fetchall()
             list_profit = [dict(s) for s in user]
             if user:
@@ -247,33 +246,39 @@ class DataBase:
     def create_tab(self):
         """ creating a table of users and a table of wishes of users """
         try:
-            sql = f"""CREATE TABLE IF NOT EXISTS "{self.user['email']}"( ID serial PRIMARY KEY NOT NULL,
-                                                                          symbol VARCHAR(500) NOT NULL,
-                                                                          description text NOT NULL,
-                                                                          exch VARCHAR(70) NOT NULL,
-                                                                          type VARCHAR(70) NOT NULL,
-                                                                          open double precision NOT NULL,
-                                                                          high double precision NOT NULL,
-                                                                          low double precision NOT NULL,
-                                                                          bid double precision NOT NULL,
-                                                                          ask double precision NOT NULL,
-                                                                          change_percentage double precision NOT NULL,
-                                                                          prevclose double precision NOT NULL,
-                                                                          week_52_high double precision NOT NULL,
-                                                                          week_52_low double precision NOT NULL,
-                                                                          trade_date VARCHAR(500) NOT NULL                                           
-                                                                          );"""
+            name = self.user['refactor_email']
+            sql = f"""CREATE TABLE IF NOT EXISTS {name}
+                                                             (id INT AUTO_INCREMENT,
+                                                              symbol VARCHAR(500),
+                                                              description text,
+                                                              exch VARCHAR(70),
+                                                              type VARCHAR(70),
+                                                              open double,
+                                                              high double,
+                                                              low double,
+                                                              bid double,
+                                                              ask double,
+                                                              change_percentage double,
+                                                              prevclose double,
+                                                              week_52_high double,
+                                                              week_52_low double,
+                                                              trade_date VARCHAR(500),
+                                                              PRIMARY KEY (id)
+                                                              );"""
+
             self.cursor.execute(sql)
-            self.cursor.execute(f"""CREATE TABLE IF NOT EXISTS users (
-                                                  ID serial PRIMARY KEY NOT NULL,
-                                                  FIRST_NAME VARCHAR(500) NOT NULL,
-                                                  LAST_NAME VARCHAR(500) NOT NULL,
-                                                  USERNAME VARCHAR (500) NOT NULL,
-                                                  PASSWORD VARCHAR NOT NULL,
-                                                  EMAIL VARCHAR (500) NOT NULL,
-                                                  ADDRESS VARCHAR(500) NOT NULL,
-                                                  oper_date VARCHAR(500) NOT NULL                                          
-                                                  );""")
+            sql_user = """CREATE TABLE IF NOT EXISTS users (
+                                                  id INT AUTO_INCREMENT,
+                                                  FIRST_NAME VARCHAR(500),
+                                                  LAST_NAME VARCHAR(500),
+                                                  USERNAME VARCHAR(500),
+                                                  PASSWORD VARCHAR(500),
+                                                  EMAIL VARCHAR(500),
+                                                  ADDRESS VARCHAR(500),
+                                                  oper_date VARCHAR(500),
+                                                  PRIMARY KEY(id)
+                                                  );"""
+            self.cursor.execute(sql_user)
             self.cursor.close()
             self.connection.commit()
             return True
@@ -286,19 +291,24 @@ class DataBase:
     def add_message(self):
         """ adds sent user messages to the database """
         try:
+            print(1)
             self.cursor.execute("""CREATE TABLE IF NOT EXISTS message (
-                                                              ID serial PRIMARY KEY NOT NULL,                                                              
-                                                              USERNAME VARCHAR (500) NOT NULL,                                                              
-                                                              EMAIL VARCHAR (500) NOT NULL,
-                                                              message text NOT NULL,
-                                                              oper_date VARCHAR(500) NOT NULL                                          
+                                                              id INT AUTO_INCREMENT,
+                                                              username VARCHAR(500),
+                                                              email VARCHAR(500),
+                                                              message text,
+                                                              oper_date VARCHAR(500)б
+                                                              PRIMARY KEY(id)
                                                               );""")
-            self.cursor.execute("""INSERT INTO message(USERNAME, EMAIL, message, oper_date)
-                                VALUES(%s, %s, %s, %s);""", ( f"{self.user['username']}",
-                                                              f"{self.user['email']}",
-                                                              f"{self.user['message']}",
-                                                              f"{self.user['date']}",))
+            print(2)
+            self.cursor.execute("""INSERT INTO message(username, email, message, oper_date)
+                                VALUES(%s, %s, %s, %s);""", (f"{self.user['username']}",
+                                                             f"{self.user['email']}",
+                                                             f"{self.user['message']}",
+                                                             f"{self.user['date']}",))
+            print(3)
             self.cursor.close()
+            print(4)
             self.connection.commit()
             return True
         except Exception as e:
@@ -306,3 +316,4 @@ class DataBase:
             self.connection.rollback()
             self.user['Error'] = e
             return False
+

@@ -98,7 +98,7 @@
                                         <td>{{ val }}</td>
                                     {% endif %}
                                 {% endfor %}
-                            <td> <form id="click-green" action="{{ url_for('user_list') }}" method="post" ><input type="hidden" name="stock" value="{{ value['quote'] }}"><button formmethod="post" class="btn btn-primary"  type="submit" onclick="">Купити</button></form></td>
+                            <td> <form id="click-green" action="{{ url_for('user_list') }}" method="post" ><input type="hidden" name="stock" value="{{ value }}"><button formmethod="post" class="btn btn-primary"  type="submit" onclick="">Купити</button></form></td>
                         </tr>
                     {% else %}
                          <tr bgcolor="#ff8080" style="color:#fff">
@@ -129,14 +129,34 @@
                                             <td>{{ val }}</td>
                                         {% endif %}
                                     {% endfor %}
-                                <td> <form action="{{ url_for('user_list') }}" method="post" id="click-red"><input type="hidden" name="stock" value="{{ value['quote'] }}"><button formmethod="post" class="btn btn-primary"  type="submit" onclick="">Купити</button></form></td>
+                                <td> <form action="{{ url_for('user_list') }}" method="post" id="click-red"><input type="hidden" name="stock" value="{{ value }}"><button formmethod="post" class="btn btn-primary"  type="submit" onclick="">Купити</button></form></td>
                             </tr>
                     {% endif %}
                 {% endfor %}
 
 			</tbody>
 		</table>
-
+        <nav aria-label="page">
+  <ul class="pagination">
+      {% if page['page_1'] == 1 %}
+        <li class="page-item disabled">
+          <span class="page-link">Previous</span>
+        </li>
+      {% else %}
+        <li class="page-item"><a class="page-link" href="{{ page['prev_page'] }}">Previous</a></li>
+      {% endif %}
+    <li class="page-item"><a class="page-link" href="{{ page['page_1'] }}">{{ page['page_1'] }}</a></li>
+    <li class="page-item active" aria-current="page">
+      <span class="page-link">2</span>
+    </li>
+    <li class="page-item"><a class="page-link" href="{{ page['page_3'] }}">{{ page['page_3'] }}</a></li>
+    {% if page['next_page'] <= page['pages'] %}
+        <li class="page-item"><a class="page-link" href="{{ page['next_page'] }}">Next</a></li>
+    {% else %}
+        <li class="page-item disabled"><span class="page-link">Next</span></li>
+    {% endif %}
+  </ul>
+</nav>
     </div>
 </body>
 {% endblock %}

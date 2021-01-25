@@ -1,22 +1,34 @@
-import psycopg2
+
 import datetime
 import json
+
+from OpenSSL import SSL
+#context = SSL.Context()
+#context.use_privatekey_file('server.key')
+#context.use_certificate_file('server.crt')
+import os
 
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, render_template, url_for, request, redirect, g, flash
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
+from flask_talisman import Talisman
+from flask_seasurf import SeaSurf
 
 from lesson_29_flask.userLogin_flask import UserLogin
 from lesson_29_flask.db_flask import DataBase
 from lesson_29_flask.tradier_api import symbol_stocks
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'f51ab319da5bb46ec221f7da979833a35250c86e'
+
+app.config['SECRET_KEY'] = os.urandom(24)
+#Talisman(app)
+#app.config['SESSION_COOKIE_SECURE'] = True
+#app.config['SESSION_COOKIE_HTTPONLY'] = False
 
 login_manager = LoginManager(app)
-
-amount_stock = 110
-
+#login_manager.session_protection = "strong"
+amount_stock = 10
+PER_PAGE = 1
 
 @app.route('/')
 @app.route('/index')
@@ -36,13 +48,14 @@ def login_page():
         return redirect(url_for('user_page'))
     if request.method == 'POST':
         data_user = dict(request.form)
+        data_user['refactor_email'] = str(data_user['EMAIL']).replace('@', '$').replace('.', '$')
         user = DataBase(data_user)
         user_id = user.take_user()
-        if user_id and check_password_hash(user_id['password'], data_user['password']):
+        if user_id and check_password_hash(user_id['PASSWORD'], data_user['PASSWORD']):
             remember_me = True if data_user.get('remember') else False
             userLogin = UserLogin(user_id).user_id(user_id)
             login_user(userLogin, remember=remember_me)
-            return redirect(url_for('user_page'))
+            return redirect('/user/1')
         else:
             flash('Невірно введений email або пароль')
             return redirect(url_for('login_page'))
@@ -69,30 +82,48 @@ def contacts_page():
     return render_template('contacts.html', title='Контакти')
 
 
-@app.route('/user', methods=['GET', 'POST'])
+@app.route('/user/<int:page>', methods=['GET', 'POST'])
 @login_required
-def user_page():
+def user_page(page=1):
+    count_page = 3
     user_id = current_user.user_data()
-    if user_id:
-        user_name = user_id.get('username')
-    else:
-        user_name = str(user_id)
     with open('stocks.json', 'r') as file_stocks:
         list_stocks = json.load(file_stocks)
         my_stocks = list_stocks['securities']['security']
         my_stocks = sorted(my_stocks, key=lambda symbol: symbol['symbol'])
+        pages = round(len(my_stocks) / amount_stock)
+        print(len(my_stocks), pages)
+    page = page if 1 <= page else 1
+    page = page if page <= pages else pages
+    start_pos = 0 if page == 1 else (page - 1) * amount_stock
+    start_pos = start_pos if pages <= len(my_stocks) else len(my_stocks)
+    end_pos = start_pos + amount_stock
+    end_pos = end_pos if end_pos <= len(my_stocks) else len(my_stocks)
+    my_stocks = my_stocks[start_pos:end_pos]
+    if user_id:
+        user_name = user_id.get('USERNAME')
+        user_id['refactor_email'] = str(user_id['EMAIL']).replace('@', '$').replace('.', '$')
+    else:
+        user_name = str(user_id)
+    show_page = {
+        'prev_page': page - 1,
+        'page_1': page,
+        'page_2': page + 1,
+        'page_3': page + 2,
+        'next_page': page + count_page,
+        'pages': pages
+    }
     i = 0
-    while i != amount_stock:
+    while i != len(my_stocks):
         data_symbol = symbol_stocks(my_stocks[i]['symbol'])
-        print(data_symbol)
-        if True is data_symbol['quotes']['quote']['change_percentage'] >= 0:
+        if None is not data_symbol['quotes']['quote']['change_percentage'] >= 0:
             my_stocks[i]['positive_change'] = True
         else:
             my_stocks[i]['positive_change'] = False
         my_stocks[i]['quote'] = data_symbol['quotes']['quote']
         i += 1
-    print(my_stocks[0])
-    return render_template('user.html',  title=f'{user_name}', stocks=my_stocks)
+    #print(my_stocks[0])
+    return render_template('user.html',  title=f'{user_name}', stocks=my_stocks, page=show_page)
 
 
 @app.route('/user/stocks/search/all', methods=['GET', 'POST'])
@@ -100,28 +131,25 @@ def user_page():
 def user_search():
     user_id = current_user.user_data()
     if user_id:
-        user_name = user_id.get('username')
+        user_name = user_id.get('USERNAME')
+        user_id['refactor_email'] = str(user_id['EMAIL']).replace('@', '$').replace('.', '$')
     else:
         user_name = str(user_id)
     if request.method == 'POST':
-        stock = [dict(request.form)]
-        with open('stocks.json', 'r') as file_stocks:
-            list_stocks = json.load(file_stocks)
-            stocks = list_stocks['securities']['security']
-            for i in stocks:
-                if i['symbol'] == stock[0]['symbol']:
-                    my_stocks = [i]
-        print(my_stocks)
-        data_symbol = [symbol_stocks(my_stocks[0]['symbol'])]
+        stock = dict(request.form)
+        symbol = stock['symbol']
+        data_symbol = symbol_stocks(symbol)
         if data_symbol:
-            if True is data_symbol[0]['quotes']['quote']['change_percentage'] >= 0:
+            with open('stocks.json', 'r') as file_stocks:
+                list_stocks = json.load(file_stocks)
+                my_stocks = [i for i in list_stocks['securities']['security'] if i['symbol'] == symbol]
+            if data_symbol['quotes']['quote']['change_percentage'] >= 0:
                 my_stocks[0]['positive_change'] = True
             else:
                 my_stocks[0]['positive_change'] = False
-            my_stocks[0]['quote'] = data_symbol[0]['quotes']['quote']
-            print(my_stocks)
+            my_stocks[0]['quote'] = data_symbol['quotes']['quote']
             return render_template('user.html', title=f'{user_name}', stocks=my_stocks)
-        my_stocks = [{'Дані відсутні': f'Символ {my_stocks[0]["symbol"]} не знайдено'}]
+        my_stocks = [{'Дані відсутні': f'Символ {stock["symbol"]} не знайдено'}]
         return render_template('user.html', title=f'{user_name}', stocks=my_stocks)
     return redirect(url_for('user_page'))
 
@@ -131,7 +159,8 @@ def user_search():
 def user_list_search():
     user_id = current_user.user_data()
     if user_id:
-        user_name = user_id.get('username')
+        user_name = user_id.get('USERNAME')
+        user_id['refactor_email'] = str(user_id['EMAIL']).replace('@', '$').replace('.', '$')
     else:
         user_name = str(user_id)
     if request.method == 'POST':
@@ -152,7 +181,6 @@ def user_list_search():
                 user_stocks[i]['bid'] = price
                 user_stocks[i]['ask'] = price_new
                 user_stocks[i]['change_percentage'] = round((price_new - price) / price * 100, 2)
-                print(user_stocks)
                 if delta >= 0:
                     user_stocks[i]['positive_profit'] = True
                 else:
@@ -172,40 +200,34 @@ def user_list_search():
 def user_list():
     user_id = current_user.user_data()
     if user_id:
-        user_name = user_id.get('username')
+        user_name = user_id.get('USERNAME')
+        user_id['refactor_email'] = str(user_id['EMAIL']).replace('@', '$').replace('.', '$')
+        text_flash = 'Вітаємо.'
     else:
         user_name = str(user_id)
+        text_flash = ''
     if request.method == 'POST':
         my_stocks = dict(request.form)
         my_stocks = eval(my_stocks['stock'])
+        if not my_stocks.get('quote'):
+            data_symbol = symbol_stocks(my_stocks['symbol'])
+            if True is data_symbol['quotes']['quote']['change_percentage'] >= 0:
+                my_stocks['positive_change'] = True
+            else:
+                my_stocks['positive_change'] = False
+            my_stocks['quote'] = data_symbol['quotes']['quote']
+            return render_template('user.html', title=f'{user_name}', stocks=[my_stocks])
+        my_stocks = my_stocks['quote']
         my_stocks['trade_date'] = str(datetime.datetime.today())[:16]
         user_id['stock'] = my_stocks
-        user_stocks = DataBase(user_id).add_user_views()
+        user_stocks = DataBase(user_id)
+        user_stocks = user_stocks.add_user_views()
         if user_stocks:
             text_flash = 'Дані збережено'
         else:
             text_flash = f"Символ паперу {my_stocks['symbol']}: {my_stocks['description']} вже відслідковується"
-        user_stocks = DataBase(user_id).take_user_views()
-        i = 0
-        while i != len(user_stocks):
-            price = user_stocks[i]['ask']
-            data_symbol = symbol_stocks(user_stocks[i]['symbol'])
-            price_new = data_symbol['quotes']['quote']['bid']
-            delta = round((price_new - price) * 100, 2)
-            user_stocks[i]['profit'] = delta
-            user_stocks[i]['bid'] = price
-            user_stocks[i]['ask'] = price_new
-            user_stocks[i]['change_percentage'] = round((price_new-price)/price*100, 2)
-            if delta >= 0:
-                user_stocks[i]['positive_profit'] = True
-            else:
-                user_stocks[i]['positive_profit'] = False
-            i += 1
-        user_stocks = sorted(user_stocks, key=lambda symbol: symbol['trade_date'], reverse=True)
-        sum_profit = sum([+i['profit'] for i in user_stocks])
-        flash(f'{text_flash}')
-        return render_template('user_list.html', title=f'{user_name}', stocks=user_stocks, sum_profit=sum_profit)
-    user_stocks = DataBase(user_id).take_user_views()
+    user_stocks = DataBase(user_id)
+    user_stocks = user_stocks.take_user_views()
     if not user_stocks:
         sum_profit = 0
         user_stocks = [{'Дані відсутні': 'Список спостереження порожній'}]
@@ -229,6 +251,7 @@ def user_list():
         i += 1
     user_stocks = sorted(user_stocks, key=lambda symbol: symbol['trade_date'], reverse=True)
     sum_profit = sum([+i['profit'] for i in user_stocks])
+    flash(f'{text_flash}')
     return render_template('user_list.html', title=f'{user_name}', stocks=user_stocks, sum_profit=sum_profit)
 
 
@@ -237,7 +260,8 @@ def user_list():
 def user_list_del():
     user_id = current_user.user_data()
     if user_id:
-        user_name = user_id.get('username')
+        user_name = user_id.get('USERNAME')
+        user_id['refactor_email'] = str(user_id['EMAIL']).replace('@', '$').replace('.', '$')
     else:
         user_name = str(user_id)
     if request.method == 'POST':
@@ -252,7 +276,7 @@ def user_list_del():
             else:
                 flash_text = f'100 шт {my_stocks["symbol"]} продано з збитком {my_stocks["profit"]}'
         else:
-            flash_text = f"Сталась помилка з'єдання з базою даних."
+            flash_text = f"Сталась помилка з\'єдання з базою даних."
         flash(flash_text)
         return redirect(url_for('user_list'))
     return render_template('index.html', title=f'{user_name}')
@@ -263,7 +287,8 @@ def user_list_del():
 def user_profit_page():
     user_id = current_user.user_data()
     if user_id:
-        user_name = user_id.get('username')
+        user_name = user_id.get('USERNAME')
+        user_id['refactor_email'] = str(user_id['EMAIL']).replace('@', '$').replace('.', '$')
     else:
         user_name = str(user_id)
     user_profit = DataBase(user_id).take_user_profit()
@@ -297,24 +322,24 @@ def profile_page():
         elif not user['firstName'].isalpha() or not user['lastName'].isalpha():
             flash("Поле ім\'я або фамілія має містити лише букви")
             return redirect(url_for('profile_page'))
-        elif '@' not in user['email'] or '.' not in user['email']:
+        elif '@' not in user['EMAIL'] or '.' not in user['EMAIL']:
             flash('Невірно введений формат електронної пошти')
             return redirect(url_for('profile_page'))
-        elif user['password'] != user['password2']:
+        elif user['PASSWORD'] != user['PASSWORD2']:
             flash('Введені паролі не рівні')
             return redirect(url_for('profile_page'))
         for key, values in user.items():
             user[key] = values.strip()
         user['id'] = user_id['id']
-        user['password'] = generate_password_hash(user['password'])
-        user.pop('password2')
+        user['PASSWORD'] = generate_password_hash(user['PASSWORD'])
+        user.pop('PASSWORD2')
         user['date'] = str(datetime.datetime.today())[:16]
         user_edit = DataBase(user)
         db_user = user_edit.edit_user()
         if db_user:
-            flash(f"{user['username']}, Ви успішно змінили особисті дані")
+            flash(f"{user['USERNAME']}, Ви успішно змінили особисті дані")
             return redirect(url_for('user_page'))
-        flash(f"Користувач з {user['email']} вже існує")
+        flash(f"Користувач з {user['EMAIL']} вже існує")
         return redirect(url_for('new_user_page'))
     return render_template('profile_user.html', title='Профіль', username=user_id)
 
@@ -324,7 +349,8 @@ def profile_page():
 def del_profile_page():
     user_id = current_user.user_data()
     if user_id:
-        user_name = user_id.get('username')
+        user_name = user_id.get('USERNAME')
+        user_id['refactor_email'] = str(user_id['EMAIL']).replace('@', '$').replace('.', '$')
     else:
         user_name = str(user_id)
     if request.method == 'POST':
@@ -342,29 +368,30 @@ def new_user_page():
         return redirect(url_for('user_page'))
     if request.method == 'POST':
         data_new_user = dict(request.form)
+        data_new_user['refactor_email'] = str(data_new_user['EMAIL']).replace('@', '$').replace('.', '$')
         if '' in data_new_user.values() or ' ' in data_new_user.values():
             flash('Поля мають бути заповненими')
             return redirect(url_for('new_user_page'))
         elif not data_new_user['firstName'].isalpha() or not data_new_user['lastName'].isalpha():
             flash("Поле ім\'я або фамілія має містити лише букви")
             return redirect(url_for('new_user_page'))
-        elif '@' not in data_new_user['email'] or '.' not in data_new_user['email']:
+        elif '@' not in data_new_user['EMAIL'] or '.' not in data_new_user['EMAIL']:
             flash('Невірно введений формат електронної пошти')
             return redirect(url_for('new_user_page'))
-        elif data_new_user['password'] != data_new_user['password2']:
+        elif data_new_user['PASSWORD'] != data_new_user['PASSWORD2']:
             flash('Введені паролі не рівні')
             return redirect(url_for('new_user_page'))
         for key, values in data_new_user.items():  # треба дізнатись чи треба паролі стріпати
             data_new_user[key] = values.strip()
-        data_new_user['password'] = generate_password_hash(data_new_user['password'])
-        data_new_user.pop('password2')
+        data_new_user['PASSWORD'] = generate_password_hash(data_new_user['PASSWORD'])
+        data_new_user.pop('PASSWORD2')
         data_new_user['date'] = str(datetime.datetime.today())[:16]
         new_user = DataBase(data_new_user)
         db_user = new_user.add_user()
         if db_user:
-            flash(f"{data_new_user['username']}, Ви успішно зареєструвались.")
+            flash(f"{data_new_user['USERNAME']}, Ви успішно зареєструвались.")
             return redirect(url_for('login_page'))
-        flash(f"Користувач з {data_new_user['email']} вже існує.")
+        flash(f"Користувач з {data_new_user['EMAIL']} вже існує.")
         return redirect(url_for('new_user_page'))
     return render_template('new_user.html', title='Реєстрація')
 
@@ -374,7 +401,7 @@ def new_user_page():
 def logout_page():
     user_id = current_user.user_data()
     if user_id:
-        username = user_id.get('username')
+        username = user_id.get('USERNAME')
         flash(f'{username}, Ви вийшли з кабінету.')
     logout_user()
     return redirect(url_for('main_page'))
@@ -392,14 +419,25 @@ def error_page(error):
     return redirect(url_for('login_page')), 401
 
 
+@app.errorhandler(403)
+def error_page1(error):
+    flash(error)
+    return render_template('login.html', title='Авторизація'), 403
+
+
+
 @app.errorhandler(404)
 def error_page1(error):
     flash('Авторизуйтесь будь ласка')
     return render_template('login.html', title='Авторизація'), 404
 
+@app.errorhandler(500)
+def error_page1(error):
+    flash(error)
+    return render_template('login.html', title='Авторизація'), 500
 
-app.run(host='0.0.0.0', port='5000', debug=True)
 
+app.run(host='localhost', port='8888', debug=True)
 
 
 """@app.after_request

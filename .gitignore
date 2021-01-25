@@ -1,0 +1,8 @@
+
+.idea/.name
+*.xml
+.idea/modules.xml
+*.xml
+*.pyc
+*.xml
+.idea/my_project.iml

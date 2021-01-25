@@ -17,7 +17,12 @@
     <ul class="list-inline">
         <li class="list-inline-item"><a href="{{url_for('main_page')}}" style="color:#fff"><h4>Головна сторінка</h4></a></li>
       {% if current_user.is_authenticated %}
-        <li class="list-inline-item"><a href="{{url_for('user_page')}}" style="color:#fff"><h4>Перелік акцій</h4></a></li>
+        {% if page['page'] %}
+            <li class="list-inline-item"><a href="{{url_for('user_page', page=page['page_1'])}}" style="color:#fff"><h4>Перелік акцій</h4></a></li>
+        {% else %}
+            <li class="list-inline-item"><a href="{{url_for('user_page', page=1)}}" style="color:#fff"><h4>Перелік акцій</h4></a></li>
+        {% endif %}
+
         <li class="list-inline-item"><a href="{{url_for('user_list')}}" style="color:#fff"><h4>Придбані акції</h4></a></li>
         <li class="list-inline-item"><a href="{{url_for('user_profit_page')}}" style="color:#fff"><h4>Прибуток від операцій</h4></a></li>
         <li class="list-inline-item"><a href="{{url_for('profile_page')}}" style="color:#fff"><h4>Реєстрацйні дані</h4></a></li>
