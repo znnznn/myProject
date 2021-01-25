@@ -4,5 +4,9 @@
 .idea/modules.xml
 *.xml
 *.pyc
+<<<<<<< HEAD
 *.xml
 .idea/my_project.iml
+=======
+.idea/modules.xml
+>>>>>>> b4a8125406f8f0cd32122f193af71dce206ded57
