@@ -17,7 +17,7 @@
     <ul class="list-inline">
         <li class="list-inline-item"><a href="{{url_for('main_page')}}" style="color:#fff"><h4>Головна сторінка</h4></a></li>
       {% if current_user.is_authenticated %}
-        {% if page['page'] %}
+        {% if page %}
             <li class="list-inline-item"><a href="{{url_for('user_page', page=page['page_1'])}}" style="color:#fff"><h4>Перелік акцій</h4></a></li>
         {% else %}
             <li class="list-inline-item"><a href="{{url_for('user_page', page=1)}}" style="color:#fff"><h4>Перелік акцій</h4></a></li>

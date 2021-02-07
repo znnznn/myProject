@@ -45,7 +45,7 @@ def load_user(user_id):
 @app.route('/login', methods=["POST", "GET"])
 def login_page():
     if current_user.is_authenticated:
-        return redirect(url_for('user_page'))
+        return redirect(url_for('user_page'), 1)
     if request.method == 'POST':
         data_user = dict(request.form)
         data_user['refactor_email'] = str(data_user['EMAIL']).replace('@', '$').replace('.', '$')
@@ -85,6 +85,8 @@ def contacts_page():
 @app.route('/user/<int:page>', methods=['GET', 'POST'])
 @login_required
 def user_page(page=1):
+    print(page)
+    page = page if type(page) == int else 1
     count_page = 3
     user_id = current_user.user_data()
     with open('stocks.json', 'r') as file_stocks:
@@ -92,9 +94,12 @@ def user_page(page=1):
         my_stocks = list_stocks['securities']['security']
         my_stocks = sorted(my_stocks, key=lambda symbol: symbol['symbol'])
         pages = round(len(my_stocks) / amount_stock)
+        pages = pages if len(my_stocks) % amount_stock == 0 else pages + 1
         print(len(my_stocks), pages)
     page = page if 1 <= page else 1
+    print(page)
     page = page if page <= pages else pages
+    print(page)
     start_pos = 0 if page == 1 else (page - 1) * amount_stock
     start_pos = start_pos if pages <= len(my_stocks) else len(my_stocks)
     end_pos = start_pos + amount_stock
@@ -428,7 +433,7 @@ def error_page1(error):
 
 @app.errorhandler(404)
 def error_page1(error):
-    flash('Авторизуйтесь будь ласка')
+    flash(error)
     return render_template('login.html', title='Авторизація'), 404
 
 @app.errorhandler(500)
