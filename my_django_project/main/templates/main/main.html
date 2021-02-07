@@ -1,10 +1,10 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="ua">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="{{ STATIC_URL }}main.css" type="text/css">
-
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" type="text/css">
     <title>{% block title %}Біржовий аналітик{% endblock %}</title>
 
 </head>
@@ -16,8 +16,13 @@
         <nav class="nav-tabs nav-item nav-link">
     <ul class="list-inline">
         <li class="list-inline-item"><a href="{% url 'Home' %}"><h4>Головна сторінка</h4></a></li>
-
-
+        {% if not user.is_authenticated %}
+        <li class="list-inline-item"><a href="{% url 'Login' %}"><h4>Авторизація</h4></a></li>
+        <li class="list-inline-item"><a href="{% url 'SignUp' %}"><h4>Зареєструватись</h4></a></li>
+        {% else %}
+        <li class="list-inline-item"><a href="{% url 'logout_user' %}"><h4>Вийти</h4></a></li>
+        <li class="list-inline-item"><a href="{% url 'Profile' %}"><h4>Профіль</h4></a></li>
+        {% endif %}
         <li class="list-inline-item"><a href="{% url 'Contacts' %}"><h4>Контакти</h4></a></li>
 
 
