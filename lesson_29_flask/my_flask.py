@@ -93,13 +93,11 @@ def user_page(page=1):
         list_stocks = json.load(file_stocks)
         my_stocks = list_stocks['securities']['security']
         my_stocks = sorted(my_stocks, key=lambda symbol: symbol['symbol'])
-        pages = round(len(my_stocks) / amount_stock)
+        pages = len(my_stocks) // amount_stock
         pages = pages if len(my_stocks) % amount_stock == 0 else pages + 1
-        print(len(my_stocks), pages)
+        print(len(my_stocks), pages, len(my_stocks) % amount_stock)
     page = page if 1 <= page else 1
-    print(page)
     page = page if page <= pages else pages
-    print(page)
     start_pos = 0 if page == 1 else (page - 1) * amount_stock
     start_pos = start_pos if pages <= len(my_stocks) else len(my_stocks)
     end_pos = start_pos + amount_stock
