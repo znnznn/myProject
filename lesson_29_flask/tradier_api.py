@@ -30,8 +30,21 @@ def symbol_stocks(symbol: str):
     return resp
 
 
+def symbol_stocks_historical(symbol: str, start_date: str, end_date: str, interval: str) -> dict:
+    date = "year, month, day, daily, weekly, monthly"
+    #url = f"https://api.tradier.com/v1/markets/quotes?symbols=aapl"
+    url = f'https://sandbox.tradier.com/v1/markets/history'
+    params = {'symbol': symbol, 'interval': interval, 'start': start_date, 'end': end_date}
+    headers = {"Accept": "application/json",
+               "Authorization": "Bearer 6ieiYLJ6rJGbWJWHXOivBDFYi7kR"}
+    response = requests.get(url, params=params, headers=headers)
+    resp = response.json()
+    print(response.status_code)
+    return resp['history']['day']
+
+
 if __name__ == '__main__':
-    print(symbol_stocks('aapl'))
+    print(symbol_stocks_historical(symbol='AAPL', start_date='2021-03-01', end_date='2021-03-05', interval='daily'))
 
 
 """ A	NYSE MKT

@@ -22,7 +22,11 @@
         {% else %}
             <li class="list-inline-item"><a href="{{url_for('user_page', page=1)}}" style="color:#fff"><h4>Перелік акцій</h4></a></li>
         {% endif %}
-
+        {% if stock %}
+        <li class="list-inline-item"><a href="{{url_for('schedule', stock=stock)}}" style="color:#fff"><h4>Графік</h4></a></li>
+        {% else %}
+        <li class="list-inline-item"><a href="{{url_for('schedule', stock='AAPL')}}" style="color:#fff"><h4>Графік</h4></a></li>
+        {% endif %}
         <li class="list-inline-item"><a href="{{url_for('user_list')}}" style="color:#fff"><h4>Придбані акції</h4></a></li>
         <li class="list-inline-item"><a href="{{url_for('user_profit_page')}}" style="color:#fff"><h4>Прибуток від операцій</h4></a></li>
         <li class="list-inline-item"><a href="{{url_for('profile_page')}}" style="color:#fff"><h4>Реєстрацйні дані</h4></a></li>

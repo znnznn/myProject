@@ -8,6 +8,9 @@ from OpenSSL import SSL
 #context.use_certificate_file('server.crt')
 import os
 
+import pandas as pd
+import mplfinance as mplf
+
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, render_template, url_for, request, redirect, g, flash
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
@@ -16,7 +19,7 @@ from flask_seasurf import SeaSurf
 
 from lesson_29_flask.userLogin_flask import UserLogin
 from lesson_29_flask.db_flask import DataBase
-from lesson_29_flask.tradier_api import symbol_stocks
+from lesson_29_flask.tradier_api import symbol_stocks, symbol_stocks_historical
 
 app = Flask(__name__)
 
@@ -397,6 +400,34 @@ def new_user_page():
         flash(f"Користувач з {data_new_user['EMAIL']} вже існує.")
         return redirect(url_for('new_user_page'))
     return render_template('new_user.html', title='Реєстрація')
+
+
+@app.route('/user/schedule/<stock>', methods=['GET', 'POST'])
+@login_required
+def schedule(stock):
+    stock = stock
+    end_date =str(datetime.datetime.today())[:10]
+    start_date = str(datetime.datetime.today() - datetime.datetime.today() - datetime.timedelta(days=365))[:10]
+    data = symbol_stocks_historical(symbol=str(stock), start_date=start_date, end_date=end_date, interval='daily')
+
+    d = pd.DataFrame(data, index=[i['date'] for i in data])
+    d.drop(['date'], axis=1, inplace=True)
+    print(d)
+    d.index.name = 'date'
+    d.index = pd.to_datetime(d.index)
+    d.shape
+    print(d)
+    kwargs = dict(type='candle', mav=(8, 100, 233), volume=True, figratio=(11, 8), figscale=0.85)
+    mc = mplf.make_marketcolors(up='#1de04e', down='#ff8080',
+                                edge='inherit',
+                                wick='black',
+                                volume='in',
+                                ohlc='i',
+                                )
+    s = mplf.make_mpf_style(marketcolors=mc)
+
+    mplf.plot(d, **kwargs, style=s, savefig='static/apple_march_2020.png')
+    return render_template('schedule.html', title='графік', stock=stock)
 
 
 @app.route('/logout', methods=['GET', 'POST'])
