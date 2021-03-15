@@ -406,8 +406,8 @@ def new_user_page():
 @login_required
 def schedule(stock):
     stock = stock
-    end_date =str(datetime.datetime.today())[:10]
-    start_date = str(datetime.datetime.today() - datetime.datetime.today() - datetime.timedelta(days=365))[:10]
+    end_date = str(datetime.datetime.today())[:10]
+    start_date = str(datetime.datetime.today() - datetime.datetime.today() - datetime.timedelta(days=180))[:10]
     data = symbol_stocks_historical(symbol=str(stock), start_date=start_date, end_date=end_date, interval='daily')
 
     d = pd.DataFrame(data, index=[i['date'] for i in data])
@@ -425,8 +425,8 @@ def schedule(stock):
                                 ohlc='i',
                                 )
     s = mplf.make_mpf_style(marketcolors=mc)
-
-    mplf.plot(d, **kwargs, style=s, savefig='static/apple_march_2020.png')
+    title_schedule = f'{stock}{start_date}{end_date}'
+    mplf.plot(d, **kwargs, style=s, savefig='static/apple_march_2020.png', title=title_schedule)
     return render_template('schedule.html', title='графік', stock=stock)
 
 
