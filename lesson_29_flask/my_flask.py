@@ -404,19 +404,29 @@ def new_user_page():
 
 @app.route('/user/schedule/<stock>', methods=['GET', 'POST'])
 @login_required
-def schedule(stock):
-    stock = stock
+def schedule(stock='AAPL'):
+    if request.method == 'POST':
+        data_form = dict(request.form)
+        stock = str(data_form['symbol']).upper()
+        if not data_form:
+            flash(f'Данні по {stock} не знайдено')
+            return render_template('schedule.html', title='графік', stock=stock)
+        else:
+            return redirect(url_for('schedule', stock=stock))
+    stock = str(stock).upper()
     end_date = str(datetime.datetime.today())[:10]
-    start_date = str(datetime.datetime.today() - datetime.datetime.today() - datetime.timedelta(days=180))[:10]
-    data = symbol_stocks_historical(symbol=str(stock), start_date=start_date, end_date=end_date, interval='daily')
-
+    start_date = str(datetime.datetime.today() - datetime.timedelta(days=180))[:10]
+    data = symbol_stocks_historical(symbol=stock, start_date=start_date, end_date=end_date, interval='daily')
+    if not data:
+        flash(f'Данні по {stock} не знайдено')
+        return render_template('schedule.html', title='графік', stock=stock)
+    else:
+        stock_name = symbol_stocks(stock)['quotes']['quote']['description']
     d = pd.DataFrame(data, index=[i['date'] for i in data])
     d.drop(['date'], axis=1, inplace=True)
-    print(d)
     d.index.name = 'date'
     d.index = pd.to_datetime(d.index)
     d.shape
-    print(d)
     kwargs = dict(type='candle', mav=(8, 100, 233), volume=True, figratio=(11, 8), figscale=0.85)
     mc = mplf.make_marketcolors(up='#1de04e', down='#ff8080',
                                 edge='inherit',
@@ -425,7 +435,7 @@ def schedule(stock):
                                 ohlc='i',
                                 )
     s = mplf.make_mpf_style(marketcolors=mc)
-    title_schedule = f'{stock}{start_date}{end_date}'
+    title_schedule = f'{stock}-{stock_name} період з {start_date} по {end_date}'
     mplf.plot(d, **kwargs, style=s, savefig='static/apple_march_2020.png', title=title_schedule)
     return render_template('schedule.html', title='графік', stock=stock)
 
