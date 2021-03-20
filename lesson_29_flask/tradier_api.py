@@ -39,12 +39,15 @@ def symbol_stocks_historical(symbol: str, start_date: str, end_date: str, interv
                "Authorization": "Bearer 6ieiYLJ6rJGbWJWHXOivBDFYi7kR"}
     response = requests.get(url, params=params, headers=headers)
     resp = response.json()
-    print(response.status_code)
+
+    if resp['history'] is None:
+        return False
     return resp['history']['day']
 
 
 if __name__ == '__main__':
-    print(symbol_stocks_historical(symbol='AAPL', start_date='2021-03-01', end_date='2021-03-05', interval='daily'))
+    print(symbol_stocks('AAPL'))
+    #print(symbol_stocks_historical(symbol='AAPL', start_date='2021-03-01', end_date='2021-03-05', interval='daily'))
 
 
 """ A	NYSE MKT
