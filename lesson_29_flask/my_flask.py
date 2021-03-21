@@ -1,6 +1,7 @@
 
 import datetime
 import json
+#from wsgiref import headers
 
 from OpenSSL import SSL
 #context = SSL.Context()
@@ -12,7 +13,7 @@ import pandas as pd
 import mplfinance as mplf
 
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import Flask, render_template, url_for, request, redirect, g, flash
+from flask import Flask, render_template, url_for, request, redirect, g, flash, after_this_request, make_response
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 from flask_talisman import Talisman
 from flask_seasurf import SeaSurf
@@ -32,6 +33,7 @@ login_manager = LoginManager(app)
 #login_manager.session_protection = "strong"
 amount_stock = 10
 PER_PAGE = 1
+INTERVAL = 'daily'
 
 @app.route('/')
 @app.route('/index')
@@ -61,7 +63,7 @@ def login_page():
             return redirect('/user/1')
         else:
             flash('Невірно введений email або пароль')
-            return redirect(url_for('login_page'))
+            return render_template(redirect(url_for('login_page')))
     return render_template('login.html', title='Авторизація')
 
 
@@ -405,18 +407,33 @@ def new_user_page():
 @app.route('/user/schedule/<stock>', methods=['GET', 'POST'])
 @login_required
 def schedule(stock='AAPL'):
+    global INTERVAL
     if request.method == 'POST':
+        print(request.headers)
+        # request.headers['Cache-Control'] = "no-store"
+        # request.headers["Pragma"] = "no-cache"
+        # request.headers["Expires"] = "0"
+        print(request.headers)
         data_form = dict(request.form)
+        print(data_form)
         stock = str(data_form['symbol']).upper()
+        INTERVAL = data_form['period']
+        print(INTERVAL)
         if not data_form:
             flash(f'Данні по {stock} не знайдено')
             return render_template('schedule.html', title='графік', stock=stock)
         else:
             return redirect(url_for('schedule', stock=stock))
+    print(INTERVAL)
     stock = str(stock).upper()
     end_date = str(datetime.datetime.today())[:10]
-    start_date = str(datetime.datetime.today() - datetime.timedelta(days=180))[:10]
-    data = symbol_stocks_historical(symbol=stock, start_date=start_date, end_date=end_date, interval='daily')
+    if INTERVAL == 'monthly':
+        start_date = str(datetime.datetime.today() - datetime.timedelta(days=1460))[:10]
+    elif INTERVAL == 'weekly':
+        start_date = str(datetime.datetime.today() - datetime.timedelta(days=730))[:10]
+    else:
+        start_date = str(datetime.datetime.today() - datetime.timedelta(days=180))[:10]
+    data = symbol_stocks_historical(symbol=stock, start_date=start_date, end_date=end_date, interval=INTERVAL)
     if not data:
         flash(f'Данні по {stock} не знайдено')
         return render_template('schedule.html', title='графік', stock=stock)
@@ -435,8 +452,21 @@ def schedule(stock='AAPL'):
                                 ohlc='i',
                                 )
     s = mplf.make_mpf_style(marketcolors=mc)
-    title_schedule = f'{stock}-{stock_name} період з {start_date} по {end_date}'
+    title_schedule = f'{stock}-{stock_name} період з {start_date} по {end_date} по {INTERVAL}'
     mplf.plot(d, **kwargs, style=s, savefig='static/apple_march_2020.png', title=title_schedule)
+    # resp = make_response(render_template('schedule.html', title='графік', stock=stock))
+    # resp.headers['Cache-Control'] = "no-cash"
+    # resp.headers["Pragma"] = "no-store"
+    # resp.headers["Expires"] = "0"
+    # return resp
+    # @after_this_request
+    # def edit_request(request):
+    #     print(request.headers)
+    #     request.headers['Cache-Control'] = "no-store"
+    #     request.headers["Pragma"] = "no-store"
+    #     request.headers["Expires"] = "0"
+    #     print(request.headers)
+    #     return request
     return render_template('schedule.html', title='графік', stock=stock)
 
 
