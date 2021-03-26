@@ -46,8 +46,8 @@ def symbol_stocks_historical(symbol: str, start_date: str, end_date: str, interv
 
 
 if __name__ == '__main__':
-    print(symbol_stocks('AAPL'))
-    #print(symbol_stocks_historical(symbol='AAPL', start_date='2021-03-01', end_date='2021-03-05', interval='daily'))
+    #print(symbol_stocks('AAPL'))
+    print(symbol_stocks_historical(symbol='AAPL', start_date='2021-01-01', end_date='2021-03-05', interval='monthly'))
 
 
 """ A	NYSE MKT

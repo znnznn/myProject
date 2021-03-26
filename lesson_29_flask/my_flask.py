@@ -421,7 +421,7 @@ def schedule(stock='AAPL'):
         print(INTERVAL)
         if not data_form:
             flash(f'Данні по {stock} не знайдено')
-            return render_template('schedule.html', title='графік', stock=stock)
+            return render_template('schedule.html', title='графік', stock=False)
         else:
             return redirect(url_for('schedule', stock=stock))
     print(INTERVAL)
@@ -436,7 +436,7 @@ def schedule(stock='AAPL'):
     data = symbol_stocks_historical(symbol=stock, start_date=start_date, end_date=end_date, interval=INTERVAL)
     if not data:
         flash(f'Данні по {stock} не знайдено')
-        return render_template('schedule.html', title='графік', stock=stock)
+        return render_template('schedule.html', title='графік', stock=False)
     else:
         stock_name = symbol_stocks(stock)['quotes']['quote']['description']
     d = pd.DataFrame(data, index=[i['date'] for i in data])
@@ -452,7 +452,7 @@ def schedule(stock='AAPL'):
                                 ohlc='i',
                                 )
     s = mplf.make_mpf_style(marketcolors=mc)
-    title_schedule = f'{stock}-{stock_name} період з {start_date} по {end_date} по {INTERVAL}'
+    title_schedule = f'{stock}-{stock_name} \nперіод з {start_date} по {end_date} по {INTERVAL}'
     mplf.plot(d, **kwargs, style=s, savefig='static/apple_march_2020.png', title=title_schedule)
     # resp = make_response(render_template('schedule.html', title='графік', stock=stock))
     # resp.headers['Cache-Control'] = "no-cash"

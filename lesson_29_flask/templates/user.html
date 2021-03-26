@@ -94,6 +94,8 @@
                                                 <td>{{ symbol }} ↑</td>
                                             {% endif %}
                                         {% endfor %}
+                                    {% elif key == "symbol" %}
+                                        <td><li class="list-inline-item"><a href="{{url_for('schedule', stock=val)}}" style="color:#fff"><h4>{{ val }}</h4></a></li></td>
                                     {% elif key != 'positive_change' %}
                                         <td>{{ val }}</td>
                                     {% endif %}
@@ -125,6 +127,8 @@
                                                     <td>{{ symbol }} ↓</td>
                                                 {% endif %}
                                             {% endfor %}
+                                        {% elif key == "symbol" %}
+                                        <td><li class="list-inline-item"><a href="{{url_for('schedule', stock=val)}}" style="color:#fff"><h4>{{ val }}</h4></a></li></td>
                                         {% elif key != 'positive_change' %}
                                             <td>{{ val }}</td>
                                         {% endif %}

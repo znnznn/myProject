@@ -33,8 +33,9 @@
 
 
         </ul>
-       <img  src="/static/apple_march_2020.png"  width="880" height="425" alt="{{ symbol }}">
-
+       {% if stock %}
+       <img  src="/static/apple_march_2020.png"  width="880" height="425" alt="{{ stock }}">
+        {% endif %}
     </body>
  </div>
 {% endblock %}
