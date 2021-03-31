@@ -34,6 +34,7 @@ login_manager = LoginManager(app)
 amount_stock = 10
 PER_PAGE = 1
 INTERVAL = 'daily'
+SCHEDULE = 'candle'
 
 @app.route('/')
 @app.route('/index')
@@ -407,7 +408,7 @@ def new_user_page():
 @app.route('/user/schedule/<stock>', methods=['GET', 'POST'])
 @login_required
 def schedule(stock='AAPL'):
-    global INTERVAL
+    global INTERVAL, SCHEDULE
     if request.method == 'POST':
         print(request.headers)
         # request.headers['Cache-Control'] = "no-store"
@@ -418,13 +419,14 @@ def schedule(stock='AAPL'):
         print(data_form)
         stock = str(data_form['symbol']).upper()
         INTERVAL = data_form['period']
+        SCHEDULE = data_form['type']
         print(INTERVAL)
         if not data_form:
             flash(f'Данні по {stock} не знайдено')
             return render_template('schedule.html', title='графік', stock=False)
         else:
             return redirect(url_for('schedule', stock=stock))
-    print(INTERVAL)
+    print(INTERVAL, SCHEDULE)
     stock = str(stock).upper()
     end_date = str(datetime.datetime.today())[:10]
     if INTERVAL == 'monthly':
@@ -444,7 +446,7 @@ def schedule(stock='AAPL'):
     d.index.name = 'date'
     d.index = pd.to_datetime(d.index)
     d.shape
-    kwargs = dict(type='candle', mav=(8, 100, 233), volume=True, figratio=(11, 8), figscale=0.85)
+    kwargs = dict(type=SCHEDULE, mav=(8, 100, 233), volume=True, figratio=(11, 8), figscale=0.85)
     mc = mplf.make_marketcolors(up='#1de04e', down='#ff8080',
                                 edge='inherit',
                                 wick='black',
@@ -467,7 +469,7 @@ def schedule(stock='AAPL'):
     #     request.headers["Expires"] = "0"
     #     print(request.headers)
     #     return request
-    return render_template('schedule.html', title='графік', stock=stock)
+    return render_template('schedule.html', title='графік', stock=stock, interval=INTERVAL, type_sch=SCHEDULE)
 
 
 @app.route('/logout', methods=['GET', 'POST'])

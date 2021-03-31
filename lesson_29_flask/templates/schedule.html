@@ -11,9 +11,38 @@
       <form class="form-inline mt-2 mt-md-0" id="search" action="{{ url_for('schedule', stock=stock) }}" method="post">
         <input class="form-control mr-sm-2" name="symbol" value="" type="text" placeholder="Пошук" aria-label="Пошук" required="">
         <label><select class="custom-select" name="period" id="inputGroupSelect01" form="search" required="">
+            {% if interval == "weekly" %}
+            <option value="daily">Денний</option>
+            <option selected value="weekly">Тижневий</option>
+            <option value="monthly">Місячний</option>
+            {% elif interval == "monthly" %}
             <option value="daily">Денний</option>
             <option value="weekly">Тижневий</option>
+            <option selected value="monthly">Місячний</option>
+            {% else %}
+            <option selected value="daily">Денний</option>
+            <option value="weekly">Тижневий</option>
             <option value="monthly">Місячний</option>
+            {% endif %}
+             </select></label>
+        <label><select class="custom-select" name="type" id="inputGroupSelect02" form="search" required="">
+            {% if type_sch == "candle" %}
+            <option selected value="candle">Японські свічки</option>
+            <option value="ohlc">Бар</option>
+            <option value="line">Лінійний</option>
+            {% elif type_sch == "ohlc" %}
+            <option value="candle">Японські свічки</option>
+            <option selected value="ohlc">Бар</option>
+            <option value="line">Лінійний</option>
+            {% elif type_sch == "line" %}
+            <option value="candle">Японські свічки</option>
+            <option value="ohlc">Бар</option>
+            <option selected value="line">Лінійний</option>
+            {% else %}
+            <option value="candle">Японські свічки</option>
+            <option value="ohlc">Бар</option>
+            <option value="line">Лінійний</option>
+            {% endif %}
              </select></label>
         <button form="search" class="btn btn-outline-success my-2 my-sm-0" type="submit" formmethod="post">Пошук</button>
       </form>
