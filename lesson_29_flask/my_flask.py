@@ -189,6 +189,8 @@ def user_list_search():
                 user_stocks[i]['profit'] = delta
                 user_stocks[i]['bid'] = price
                 user_stocks[i]['ask'] = price_new
+                user_stocks[i]['week_52_high'] = data_symbol['quotes']['quote']['week_52_high']
+                user_stocks[i]['week_52_low'] = data_symbol['quotes']['quote']['week_52_low']
                 user_stocks[i]['change_percentage'] = round((price_new - price) / price * 100, 2)
                 if delta >= 0:
                     user_stocks[i]['positive_profit'] = True
@@ -252,6 +254,8 @@ def user_list():
         user_stocks[i]['profit'] = delta
         user_stocks[i]['bid'] = price
         user_stocks[i]['ask'] = price_new
+        user_stocks[i]['week_52_high'] = data_symbol['quotes']['quote']['week_52_high']
+        user_stocks[i]['week_52_low'] = data_symbol['quotes']['quote']['week_52_low']
         user_stocks[i]['change_percentage'] = round((price_new - price) / price * 100, 2)
         if delta >= 0:
             user_stocks[i]['positive_profit'] = True
