@@ -1,4 +1,4 @@
-# myProject
+# my PET Project
 https://znnznn.pythonanywhere.com/
 
 # user for testing
